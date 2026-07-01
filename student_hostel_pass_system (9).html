@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Hostel Pass Management</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        
+        /* Toast Notification Animations */
+        .toast-enter { animation: slideIn 0.3s ease-out forwards; }
+        .toast-exit { animation: slideOut 0.3s ease-in forwards; }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen flex flex-col">
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- Navigation -->
+    <nav class="bg-blue-800 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-building-user text-2xl"></i>
+                    <span class="font-bold text-lg sm:text-xl tracking-tight">Hostel Pass Manager</span>
+                </div>
+                <!-- Navigation Tabs -->
+                <div class="flex gap-2">
+                    <a href="admin.html" target="_blank" class="px-3 sm:px-4 py-2 rounded-md text-sm font-medium bg-blue-900 hover:bg-blue-700 transition-colors flex items-center shadow-sm"><i class="fa-solid fa-lock mr-2"></i>Admin Portal</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow p-4 sm:p-6 max-w-7xl mx-auto w-full">
+        
+        <!-- ================= SECTION 1: DATA ENTRY FORM ================= -->
+        <section id="section-entry" class="space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-blue-50 px-4 sm:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h2 class="text-lg sm:text-xl font-bold text-blue-900">Student & Family Registration</h2>
+                    <button onclick="clearDraft()" class="text-sm text-gray-500 hover:text-red-600 transition-colors"><i class="fa-solid fa-eraser mr-1"></i>Clear Draft</button>
+                </div>
+                
+                <form id="student-form" class="p-4 sm:p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                        
+                        <!-- 1. Student Details -->
+                        <div class="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-200">
+                            <h3 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">1. Student Details</h3>
+                            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-4">
+                                <div class="w-32 flex-shrink-0 flex flex-col gap-2 mx-auto sm:mx-0">
+                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden relative cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_student').click()">
+                                        <img id="preview_student" class="w-full h-full object-cover hidden" alt="Student">
+                                        <div id="placeholder_student" class="text-center text-gray-400 text-xs p-2">
+                                            <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="photo_student" accept="image/*" class="hidden" onchange="handleImageSelect(event, 'student')">
+                                </div>
+                                <div class="flex-grow space-y-3 w-full">
+                                    <input type="text" id="name_student" placeholder="Full Name *" required class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <div class="flex flex-col sm:flex-row gap-2">
+                                        <input type="text" id="class_student" placeholder="Class *" required class="w-full sm:w-1/2 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                        <input type="text" id="roll_student" placeholder="Roll No" class="w-full sm:w-1/2 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                    </div>
+                                    <input type="text" id="aadhaar_student" placeholder="Aadhaar Number (12 digits)" pattern="\d{12}" required title="12 digit Aadhaar number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <input type="text" id="phone_student" placeholder="Phone Number (10 digits)" pattern="\d{10}" required title="10 digit Phone number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Father Details -->
+                        <div class="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-200">
+                            <h3 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">2. Father's Details</h3>
+                            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                                <div class="w-32 flex-shrink-0 flex flex-col gap-2 mx-auto sm:mx-0">
+                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_father').click()">
+                                        <img id="preview_father" class="w-full h-full object-cover hidden" alt="Father">
+                                        <div id="placeholder_father" class="text-center text-gray-400 text-xs p-2">
+                                            <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="photo_father" accept="image/*" class="hidden" onchange="handleImageSelect(event, 'father')">
+                                </div>
+                                <div class="flex-grow space-y-3 w-full">
+                                    <input type="text" id="name_father" placeholder="Father's Name *" required class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <input type="text" id="aadhaar_father" placeholder="Aadhaar Number" pattern="\d{12}" required title="12 digit Aadhaar number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <input type="text" id="phone_father" placeholder="Phone Number" pattern="\d{10}" required title="10 digit Phone number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Mother Details -->
+                        <div class="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-200">
+                            <h3 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">3. Mother's Details</h3>
+                            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                                <div class="w-32 flex-shrink-0 flex flex-col gap-2 mx-auto sm:mx-0">
+                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_mother').click()">
+                                        <img id="preview_mother" class="w-full h-full object-cover hidden" alt="Mother">
+                                        <div id="placeholder_mother" class="text-center text-gray-400 text-xs p-2">
+                                            <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="photo_mother" accept="image/*" class="hidden" onchange="handleImageSelect(event, 'mother')">
+                                </div>
+                                <div class="flex-grow space-y-3 w-full">
+                                    <input type="text" id="name_mother" placeholder="Mother's Name *" required class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <input type="text" id="aadhaar_mother" placeholder="Aadhaar Number" pattern="\d{12}" required title="12 digit Aadhaar number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <input type="text" id="phone_mother" placeholder="Phone Number" pattern="\d{10}" required title="10 digit Phone number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Guardian Details -->
+                        <div class="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-200">
+                            <h3 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">4. Local Guardian</h3>
+                            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                                <div class="w-32 flex-shrink-0 flex flex-col gap-2 mx-auto sm:mx-0">
+                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_guardian').click()">
+                                        <img id="preview_guardian" class="w-full h-full object-cover hidden" alt="Guardian">
+                                        <div id="placeholder_guardian" class="text-center text-gray-400 text-xs p-2">
+                                            <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="photo_guardian" accept="image/*" class="hidden" onchange="handleImageSelect(event, 'guardian')">
+                                </div>
+                                <div class="flex-grow space-y-3 w-full">
+                                    <input type="text" id="name_guardian" placeholder="Guardian's Name *" required class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <input type="text" id="aadhaar_guardian" placeholder="Aadhaar Number" pattern="\d{12}" required title="12 digit Aadhaar number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <input type="text" id="phone_guardian" placeholder="Phone Number" pattern="\d{10}" required title="10 digit Phone number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t flex justify-end">
+                        <button type="submit" id="submit-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold shadow-md transition-all flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed">
+                            <span id="submit-loader" class="loader hidden mr-3 border-white border-t-transparent"></span>
+                            <span id="submit-text">Submit Registration Data</span>
+                            <i class="fa-solid fa-arrow-right ml-2" id="submit-icon"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FIREBASE LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgQVEDj0rRZvO5uPKI0uNh18oo1LYtjqk",
+            authDomain: "hostel-b5004.firebaseapp.com",
+            projectId: "hostel-b5004",
+            storageBucket: "hostel-b5004.firebasestorage.app",
+            messagingSenderId: "530068839296",
+            appId: "1:530068839296:web:9b631cd781a4d19ed43f65"
+        };
+
+        // Initialize Firebase Services
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global State Variables
+        let currentUser = null;
+        let imageBlobs = { student: null, father: null, mother: null, guardian: null };
+        let allStudentsData = [];
+        const DRAFT_KEY = 'hostel_pass_draft';
+
+        // Export modules to window for inline HTML onclick/onsubmit handlers to access
+        window.firebaseModules = { collection, addDoc, getDocs, doc, deleteDoc };
+        window.db = db;
+
+        // Sign in anonymously so users can upload files/data without needing an account
+        signInAnonymously(auth).catch((error) => {
+            console.error("Auth error:", error);
+            window.showToast("Connection warning: Could not sign in to database.", "error");
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+        });
+
+        // Initialize Application Events
+        setupEventListeners();
+        restoreDraft();
+
+        // --- UTILITY: TOAST NOTIFICATIONS ---
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600';
+            toast.className = `${colors} text-white px-4 py-3 rounded-lg shadow-lg text-sm toast-enter flex items-center gap-3`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle text-lg' : 'fa-circle-exclamation text-lg'}"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.replace('toast-enter', 'toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // --- IMAGE HANDLING & COMPRESSION ---
+        window.handleImageSelect = (event, role) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    // Create a canvas to crop and compress the image to a passport size square
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const size = 300; // Target Size (Square 300x300)
+                    canvas.width = size;
+                    canvas.height = size;
+                    
+                    // Center crop logic
+                    const minDim = Math.min(img.width, img.height);
+                    const startX = (img.width - minDim) / 2;
+                    const startY = (img.height - minDim) / 2;
+                    
+                    ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, size, size);
+                    
+                    // Convert to Base64 String directly (0.7 quality keeps it small for Firestore)
+                    const base64String = canvas.toDataURL('image/jpeg', 0.7);
+                    imageBlobs[role] = base64String;
+                    
+                    // Update UI Preview
+                    document.getElementById(`preview_${role}`).src = base64String;
+                    document.getElementById(`preview_${role}`).classList.remove('hidden');
+                    document.getElementById(`placeholder_${role}`).classList.add('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // --- LOCAL STORAGE DRAFT MANAGEMENT ---
+        function setupEventListeners() {
+            // Listen to all text inputs to auto-save draft
+            const inputs = document.querySelectorAll('#student-form input[type="text"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', saveDraft);
+            });
+
+            document.getElementById('student-form').addEventListener('submit', submitForm);
+            
+            // Search filter listener
+            const searchInput = document.getElementById('search-input');
+            if(searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const filtered = allStudentsData.filter(item => 
+                        item.student.name.toLowerCase().includes(term) ||
+                        item.student.aadhaar.includes(term) ||
+                        item.student.phone.includes(term) ||
+                        item.student.class.toLowerCase().includes(term)
+                    );
+                    window.renderTable(filtered);
+                });
+            }
+        }
+
+        function saveDraft() {
+            const draft = {};
+            document.querySelectorAll('#student-form input[type="text"]').forEach(input => {
+                draft[input.id] = input.value;
+            });
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        }
+
+        function restoreDraft() {
+            const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
+            if (draft) {
+                Object.keys(draft).forEach(key => {
+                    const el = document.getElementById(key);
+                    if(el) el.value = draft[key];
+                });
+            }
+        }
+
+        window.clearDraft = () => {
+            localStorage.removeItem(DRAFT_KEY);
+            document.getElementById('student-form').reset();
+            
+            // Reset image previews
+            ['student', 'father', 'mother', 'guardian'].forEach(role => {
+                imageBlobs[role] = null;
+                document.getElementById(`preview_${role}`).classList.add('hidden');
+                document.getElementById(`preview_${role}`).src = '';
+                document.getElementById(`placeholder_${role}`).classList.remove('hidden');
+            });
+        };
+
+        // --- FORM SUBMISSION (FIREBASE) ---
+        async function submitForm(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                return window.showToast("Not connected to database. Please refresh or check connection.", "error");
+            }
+
+            const btn = document.getElementById('submit-btn');
+            const text = document.getElementById('submit-text');
+            const loader = document.getElementById('submit-loader');
+            
+            // Lock UI
+            btn.disabled = true;
+            text.textContent = 'Saving Record...';
+            loader.classList.remove('hidden');
+
+            try {
+                const { collection, addDoc } = window.firebaseModules;
+
+                // Helper to get image (Base64 or Placeholder URL)
+                const getImg = (role) => {
+                    if (imageBlobs[role]) return imageBlobs[role];
+                    return `https://placehold.co/300x300/e2e8f0/64748b?text=${role.toUpperCase()}`;
+                };
+
+                // Helper to safely fetch input text
+                const getVal = (id) => document.getElementById(id).value.trim();
+
+                // Construct final Document Data (using Base64 directly)
+                const docData = {
+                    student: {
+                        name: getVal('name_student'),
+                        class: getVal('class_student'),
+                        roll: getVal('roll_student'),
+                        aadhaar: getVal('aadhaar_student'),
+                        phone: getVal('phone_student'),
+                        photo: getImg('student')
+                    },
+                    father: { name: getVal('name_father'), aadhaar: getVal('aadhaar_father'), phone: getVal('phone_father'), photo: getImg('father') },
+                    mother: { name: getVal('name_mother'), aadhaar: getVal('aadhaar_mother'), phone: getVal('phone_mother'), photo: getImg('mother') },
+                    guardian: { name: getVal('name_guardian'), aadhaar: getVal('aadhaar_guardian'), phone: getVal('phone_guardian'), photo: getImg('guardian') },
+                    createdAt: Date.now()
+                };
+
+                // Save to Firestore Database
+                await addDoc(collection(window.db, 'students'), docData);
+                
+                // Feedback
+                window.showToast("Student pass data registered successfully!");
+                
+                // Reset form and UI
+                window.clearDraft(); 
+
+            } catch (error) {
+                console.error("Submission Error Details:", error);
+                if (error.message.includes('missing or insufficient permissions')) {
+                    window.showToast("Upload failed: Firebase Security Rules are blocking access.", "error");
+                } else {
+                    window.showToast("Error saving data: " + error.message, "error");
+                }
+            } finally {
+                // Unlock UI regardless of success or failure
+                btn.disabled = false;
+                text.textContent = 'Submit Registration Data';
+                loader.classList.add('hidden');
+            }
+        }
+
+    </script>
+</body>
+</html>
