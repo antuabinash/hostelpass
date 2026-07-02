@@ -303,8 +303,8 @@
         let allStudentsData = [];
         let editingId = null;
         let studentToDelete = null;
-        let activePhotoRole = null; // Tracks which profile photo is currently being taken
-        let videoStream = null; // Tracks web camera stream
+        let activePhotoRole = null; 
+        let videoStream = null; 
         const DRAFT_KEY = 'hostel_pass_draft';
 
         window.firebaseModules = { deleteDoc, doc };
@@ -372,10 +372,7 @@
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             
-            // Slide up animation
-            setTimeout(() => {
-                content.classList.remove('translate-y-full');
-            }, 10);
+            setTimeout(() => { content.classList.remove('translate-y-full'); }, 10);
         };
 
         window.closePhotoActionSheet = () => {
@@ -386,12 +383,11 @@
             setTimeout(() => {
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
-            }, 300); // Wait for slide down animation
+            }, 300); 
         };
 
         window.triggerGalleryUpload = () => {
             closePhotoActionSheet();
-            // Trigger hidden file input for the correct role
             document.getElementById(`photo_${activePhotoRole}`).click();
         };
 
@@ -403,7 +399,6 @@
             const videoElement = document.getElementById('web-camera-video');
             
             try {
-                // Request camera (prefer front-facing/selfie for profile pics)
                 videoStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: "user" } 
                 });
@@ -414,7 +409,7 @@
             } catch (err) {
                 console.error("Camera access denied:", err);
                 window.showToast("Camera access denied or unavailable. Falling back to Gallery.", "error");
-                triggerGalleryUpload(); // Fallback if no camera
+                triggerGalleryUpload();
             }
         };
 
@@ -432,25 +427,21 @@
         window.captureWebCameraPhoto = () => {
             const video = document.getElementById('web-camera-video');
             
-            // Generate canvas for cropping & compression
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            const size = 300; // Target Size (Square 300x300)
+            const size = 300; 
             canvas.width = size;
             canvas.height = size;
             
-            // Center crop the video feed
             const minDim = Math.min(video.videoWidth, video.videoHeight);
             const startX = (video.videoWidth - minDim) / 2;
             const startY = (video.videoHeight - minDim) / 2;
             
-            // Handle mirroring in the canvas context so the final image looks correct
             ctx.translate(size, 0);
             ctx.scale(-1, 1);
             
             ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, size, size);
             
-            // Compress to 0.7 quality JPEG to save Firestore space
             const base64String = canvas.toDataURL('image/jpeg', 0.7);
             savePhotoToUI(base64String, activePhotoRole);
             
@@ -478,7 +469,6 @@
                     
                     ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, size, size);
                     
-                    // Compress to 0.7 quality JPEG to save Firestore space
                     const base64String = canvas.toDataURL('image/jpeg', 0.7);
                     savePhotoToUI(base64String, role);
                 };
@@ -487,7 +477,6 @@
             reader.readAsDataURL(file);
         };
 
-        // Shared function to apply photo to UI regardless of source (Camera or Gallery)
         function savePhotoToUI(base64Data, role) {
             imageBlobs[role] = base64Data;
             document.getElementById(`preview_${role}`).src = base64Data;
@@ -590,15 +579,16 @@
                     docData.updatedAt = Date.now();
                     await updateDoc(doc(window.db, 'students', editingId), docData);
                     window.showToast("Student data updated successfully!");
+                    window.clearDraft(); 
+                    window.toggleView(); // Jump back to view if we were editing
                 } else {
                     docData.createdAt = Date.now();
                     await addDoc(collection(window.db, 'students'), docData);
                     window.showToast("Student data registered successfully!");
+                    window.clearDraft(); 
+                    // Do NOT toggle view. Let user enter the next student immediately.
                 }
                 
-                window.clearDraft(); 
-                window.toggleView(); // Auto switch to view tab
-
             } catch (error) {
                 console.error("Submission Error Details:", error);
                 if (error.message.includes('missing or insufficient permissions')) {
