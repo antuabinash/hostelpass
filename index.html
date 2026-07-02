@@ -38,6 +38,11 @@
             display: inline-block;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Camera Video Mirroring */
+        #web-camera-video {
+            transform: scaleX(-1); /* Mirror the webcam feed for a better selfie experience */
+        }
     </style>
 </head>
 <body class="text-gray-800 min-h-screen flex flex-col">
@@ -45,7 +50,51 @@
     <!-- Toast Notifications Container -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
-    <!-- DELETE CONFIRMATION MODAL -->
+    <!-- 1. PHOTO SOURCE ACTION SHEET MODAL -->
+    <div id="photo-action-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-sm overflow-hidden transform transition-transform translate-y-full sm:translate-y-0" id="photo-action-content">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-gray-800">Select Photo Source</h3>
+                <button onclick="closePhotoActionSheet()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-2">
+                <button onclick="startWebCamera()" class="w-full flex items-center gap-4 p-4 hover:bg-blue-50 transition-colors text-left text-gray-700 font-medium">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg"><i class="fa-solid fa-camera"></i></div>
+                    <div>
+                        <div class="font-bold text-gray-900">Take Photo</div>
+                        <div class="text-xs text-gray-500">Use device camera</div>
+                    </div>
+                </button>
+                <button onclick="triggerGalleryUpload()" class="w-full flex items-center gap-4 p-4 hover:bg-blue-50 transition-colors text-left text-gray-700 font-medium border-t border-gray-100">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg"><i class="fa-solid fa-images"></i></div>
+                    <div>
+                        <div class="font-bold text-gray-900">Choose from Gallery</div>
+                        <div class="text-xs text-gray-500">Upload existing photo</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. WEB CAMERA MODAL -->
+    <div id="camera-modal" class="fixed inset-0 z-50 hidden flex-col bg-black">
+        <div class="flex justify-between items-center p-4 bg-black/50 absolute top-0 w-full z-10 text-white">
+            <span class="font-bold">Live Camera</span>
+            <button onclick="stopWebCamera()" class="p-2 hover:text-red-400 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
+        </div>
+        
+        <div class="flex-grow relative flex items-center justify-center overflow-hidden">
+            <video id="web-camera-video" class="min-w-full min-h-full object-cover" autoplay playsinline></video>
+            <!-- Overlay Square Guide -->
+            <div class="absolute w-64 h-64 border-2 border-white/50 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] pointer-events-none rounded"></div>
+        </div>
+        
+        <div class="p-6 bg-black pb-10 flex justify-center items-center">
+            <button onclick="captureWebCameraPhoto()" class="w-16 h-16 rounded-full border-4 border-gray-300 bg-white shadow-lg active:scale-95 transition-transform flex items-center justify-center focus:outline-none"></button>
+        </div>
+    </div>
+
+    <!-- 3. DELETE CONFIRMATION MODAL -->
     <div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-sm">
         <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm text-center transform transition-all scale-95">
             <div class="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
@@ -73,7 +122,7 @@
                 <!-- Navigation Tabs -->
                 <div class="flex gap-2">
                     <button onclick="toggleView()" id="nav-btn" class="px-3 sm:px-4 py-2 rounded-md text-sm font-medium bg-blue-900 hover:bg-blue-700 transition-colors flex items-center shadow-sm border border-blue-700">
-                        <i class="fa-solid fa-list mr-2"></i><span>View Uploaded Data</span>
+                        <i class="fa-solid fa-list mr-2"></i><span class="hidden sm:inline">View Uploaded Data</span><span class="sm:hidden">Data</span>
                     </button>
                 </div>
             </div>
@@ -99,7 +148,7 @@
                             <h3 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">1. Student Details</h3>
                             <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-4">
                                 <div class="w-32 flex-shrink-0 flex flex-col gap-2 mx-auto sm:mx-0">
-                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden relative cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_student').click()">
+                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden relative cursor-pointer hover:border-blue-500 transition-colors" onclick="openPhotoActionSheet('student')">
                                         <img id="preview_student" class="w-full h-full object-cover hidden" alt="Student">
                                         <div id="placeholder_student" class="text-center text-gray-400 text-xs p-2">
                                             <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
@@ -121,7 +170,7 @@
                             <h3 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">2. Father's Details</h3>
                             <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
                                 <div class="w-32 flex-shrink-0 flex flex-col gap-2 mx-auto sm:mx-0">
-                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_father').click()">
+                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="openPhotoActionSheet('father')">
                                         <img id="preview_father" class="w-full h-full object-cover hidden" alt="Father">
                                         <div id="placeholder_father" class="text-center text-gray-400 text-xs p-2">
                                             <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
@@ -142,7 +191,7 @@
                             <h3 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">3. Mother's Details</h3>
                             <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
                                 <div class="w-32 flex-shrink-0 flex flex-col gap-2 mx-auto sm:mx-0">
-                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_mother').click()">
+                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="openPhotoActionSheet('mother')">
                                         <img id="preview_mother" class="w-full h-full object-cover hidden" alt="Mother">
                                         <div id="placeholder_mother" class="text-center text-gray-400 text-xs p-2">
                                             <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
@@ -163,7 +212,7 @@
                             <h3 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">4. Local Guardian</h3>
                             <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
                                 <div class="w-32 flex-shrink-0 flex flex-col gap-2 mx-auto sm:mx-0">
-                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_guardian').click()">
+                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="openPhotoActionSheet('guardian')">
                                         <img id="preview_guardian" class="w-full h-full object-cover hidden" alt="Guardian">
                                         <div id="placeholder_guardian" class="text-center text-gray-400 text-xs p-2">
                                             <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
@@ -228,7 +277,7 @@
 
     </main>
 
-    <!-- FIREBASE LOGIC -->
+    <!-- FIREBASE & LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -244,7 +293,6 @@
             appId: "1:530068839296:web:9b631cd781a4d19ed43f65"
         };
 
-        // Initialize Firebase Services
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -255,13 +303,13 @@
         let allStudentsData = [];
         let editingId = null;
         let studentToDelete = null;
+        let activePhotoRole = null; // Tracks which profile photo is currently being taken
+        let videoStream = null; // Tracks web camera stream
         const DRAFT_KEY = 'hostel_pass_draft';
 
-        // Export modules to window for inline HTML handlers to access
         window.firebaseModules = { deleteDoc, doc };
         window.db = db;
 
-        // Sign in anonymously
         signInAnonymously(auth).catch((error) => {
             console.error("Auth error:", error);
             window.showToast("Connection warning: Could not sign in to database.", "error");
@@ -269,12 +317,9 @@
 
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
-            if(user) {
-                setupRealtimeListener();
-            }
+            if(user) setupRealtimeListener();
         });
 
-        // Initialize Application Events
         setupEventListeners();
         restoreDraft();
 
@@ -285,18 +330,15 @@
             const btn = document.getElementById('nav-btn');
             
             if (forceEntry || view.classList.contains('hidden') === false) {
-                // Show Entry form
                 entry.classList.remove('hidden');
                 view.classList.add('hidden');
-                btn.innerHTML = '<i class="fa-solid fa-list mr-2"></i><span>View Uploaded Data</span>';
-                if(!forceEntry && !editingId) window.clearDraft(); // Clean form if just switching back
+                btn.innerHTML = '<i class="fa-solid fa-list mr-2"></i><span class="hidden sm:inline">View Uploaded Data</span><span class="sm:hidden">Data</span>';
+                if(!forceEntry && !editingId) window.clearDraft(); 
             } else {
-                // Show View list
                 entry.classList.add('hidden');
                 view.classList.remove('hidden');
-                btn.innerHTML = '<i class="fa-solid fa-plus mr-2"></i><span>New Entry</span>';
+                btn.innerHTML = '<i class="fa-solid fa-plus mr-2"></i><span class="hidden sm:inline">New Entry</span><span class="sm:hidden">New</span>';
                 
-                // Cancel edit mode if they navigate away
                 if(editingId) {
                     editingId = null;
                     document.getElementById('form-title').textContent = 'Student & Family Registration';
@@ -321,7 +363,101 @@
             }, 3000);
         };
 
-        // --- IMAGE HANDLING & COMPRESSION ---
+        // --- 1. PHOTO ACTION SHEET LOGIC ---
+        window.openPhotoActionSheet = (role) => {
+            activePhotoRole = role;
+            const modal = document.getElementById('photo-action-modal');
+            const content = document.getElementById('photo-action-content');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Slide up animation
+            setTimeout(() => {
+                content.classList.remove('translate-y-full');
+            }, 10);
+        };
+
+        window.closePhotoActionSheet = () => {
+            const modal = document.getElementById('photo-action-modal');
+            const content = document.getElementById('photo-action-content');
+            
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300); // Wait for slide down animation
+        };
+
+        window.triggerGalleryUpload = () => {
+            closePhotoActionSheet();
+            // Trigger hidden file input for the correct role
+            document.getElementById(`photo_${activePhotoRole}`).click();
+        };
+
+        // --- 2. WEB CAMERA CAPTURE LOGIC ---
+        window.startWebCamera = async () => {
+            closePhotoActionSheet();
+            
+            const cameraModal = document.getElementById('camera-modal');
+            const videoElement = document.getElementById('web-camera-video');
+            
+            try {
+                // Request camera (prefer front-facing/selfie for profile pics)
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
+                
+                videoElement.srcObject = videoStream;
+                cameraModal.classList.remove('hidden');
+                cameraModal.classList.add('flex');
+            } catch (err) {
+                console.error("Camera access denied:", err);
+                window.showToast("Camera access denied or unavailable. Falling back to Gallery.", "error");
+                triggerGalleryUpload(); // Fallback if no camera
+            }
+        };
+
+        window.stopWebCamera = () => {
+            const cameraModal = document.getElementById('camera-modal');
+            cameraModal.classList.add('hidden');
+            cameraModal.classList.remove('flex');
+            
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+        };
+
+        window.captureWebCameraPhoto = () => {
+            const video = document.getElementById('web-camera-video');
+            
+            // Generate canvas for cropping & compression
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const size = 300; // Target Size (Square 300x300)
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Center crop the video feed
+            const minDim = Math.min(video.videoWidth, video.videoHeight);
+            const startX = (video.videoWidth - minDim) / 2;
+            const startY = (video.videoHeight - minDim) / 2;
+            
+            // Handle mirroring in the canvas context so the final image looks correct
+            ctx.translate(size, 0);
+            ctx.scale(-1, 1);
+            
+            ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, size, size);
+            
+            // Compress to 0.7 quality JPEG to save Firestore space
+            const base64String = canvas.toDataURL('image/jpeg', 0.7);
+            savePhotoToUI(base64String, activePhotoRole);
+            
+            stopWebCamera();
+        };
+
+        // --- 3. GALLERY UPLOAD LOGIC ---
         window.handleImageSelect = (event, role) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -342,25 +478,28 @@
                     
                     ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, size, size);
                     
+                    // Compress to 0.7 quality JPEG to save Firestore space
                     const base64String = canvas.toDataURL('image/jpeg', 0.7);
-                    imageBlobs[role] = base64String;
-                    
-                    document.getElementById(`preview_${role}`).src = base64String;
-                    document.getElementById(`preview_${role}`).classList.remove('hidden');
-                    document.getElementById(`placeholder_${role}`).classList.add('hidden');
+                    savePhotoToUI(base64String, role);
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         };
 
+        // Shared function to apply photo to UI regardless of source (Camera or Gallery)
+        function savePhotoToUI(base64Data, role) {
+            imageBlobs[role] = base64Data;
+            document.getElementById(`preview_${role}`).src = base64Data;
+            document.getElementById(`preview_${role}`).classList.remove('hidden');
+            document.getElementById(`placeholder_${role}`).classList.add('hidden');
+        }
+
         // --- DRAFT MANAGEMENT ---
         function setupEventListeners() {
             const inputs = document.querySelectorAll('#student-form input[type="text"]');
             inputs.forEach(input => {
-                input.addEventListener('input', () => {
-                    if(!editingId) saveDraft();
-                });
+                input.addEventListener('input', () => { if(!editingId) saveDraft(); });
             });
 
             document.getElementById('student-form').addEventListener('submit', submitForm);
@@ -541,7 +680,6 @@
             document.getElementById('form-title').textContent = 'Edit Registration Data';
             document.getElementById('submit-text').textContent = 'Update Registration Data';
 
-            // Populate Fields
             ['student', 'father', 'mother', 'guardian'].forEach(role => {
                 if(data[role]) {
                     if(document.getElementById(`name_${role}`)) document.getElementById(`name_${role}`).value = data[role].name || '';
@@ -549,7 +687,6 @@
                     if(document.getElementById(`phone_${role}`)) document.getElementById(`phone_${role}`).value = data[role].phone || '';
                     if(role === 'student' && document.getElementById(`class_student`)) document.getElementById(`class_student`).value = data[role].class || '';
 
-                    // Populate images
                     if(data[role].photo && !data[role].photo.includes('placehold.co')) {
                         imageBlobs[role] = data[role].photo;
                         document.getElementById(`preview_${role}`).src = data[role].photo;
@@ -563,8 +700,6 @@
                     }
                 }
             });
-            
-            // Switch view
             window.toggleView(true);
         };
 
