@@ -38,11 +38,6 @@
             display: inline-block;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Camera Video Mirroring */
-        #web-camera-video {
-            transform: scaleX(-1); /* Mirror the webcam feed for a better selfie experience */
-        }
     </style>
 </head>
 <body class="text-gray-800 min-h-screen flex flex-col">
@@ -62,7 +57,7 @@
                     <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg"><i class="fa-solid fa-camera"></i></div>
                     <div>
                         <div class="font-bold text-gray-900">Take Photo</div>
-                        <div class="text-xs text-gray-500">Use device camera</div>
+                        <div class="text-xs text-gray-500">Use device back camera</div>
                     </div>
                 </button>
                 <button onclick="triggerGalleryUpload()" class="w-full flex items-center gap-4 p-4 hover:bg-blue-50 transition-colors text-left text-gray-700 font-medium border-t border-gray-100">
@@ -84,6 +79,7 @@
         </div>
         
         <div class="flex-grow relative flex items-center justify-center overflow-hidden">
+            <!-- Video feed (Mirroring CSS removed for back camera) -->
             <video id="web-camera-video" class="min-w-full min-h-full object-cover" autoplay playsinline></video>
             <!-- Overlay Square Guide -->
             <div class="absolute w-64 h-64 border-2 border-white/50 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] pointer-events-none rounded"></div>
@@ -399,8 +395,9 @@
             const videoElement = document.getElementById('web-camera-video');
             
             try {
+                // Change facingMode from "user" to "environment" to open the back camera
                 videoStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" } 
+                    video: { facingMode: "environment" } 
                 });
                 
                 videoElement.srcObject = videoStream;
@@ -437,9 +434,7 @@
             const startX = (video.videoWidth - minDim) / 2;
             const startY = (video.videoHeight - minDim) / 2;
             
-            ctx.translate(size, 0);
-            ctx.scale(-1, 1);
-            
+            // Mirroring logic removed because back-cameras do not need mirroring
             ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, size, size);
             
             const base64String = canvas.toDataURL('image/jpeg', 0.7);
