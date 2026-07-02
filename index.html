@@ -45,6 +45,23 @@
     <!-- Toast Notifications Container -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm text-center transform transition-all scale-95">
+            <div class="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Record?</h3>
+            <p class="text-sm text-gray-500 mb-6">This action cannot be undone. The student data will be permanently removed.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-lg transition-colors border border-gray-200">Cancel</button>
+                <button onclick="executeDelete()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="bg-blue-800 text-white shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,11 +72,8 @@
                 </div>
                 <!-- Navigation Tabs -->
                 <div class="flex gap-2">
-                    <button id="tab-entry" onclick="switchTab('section-entry')" class="px-3 sm:px-4 py-2 rounded-md text-sm font-medium bg-blue-900 shadow-sm ring-2 ring-white transition-all flex items-center">
-                        <i class="fa-solid fa-user-plus mr-2"></i><span class="hidden sm:inline">Register</span>
-                    </button>
-                    <button id="tab-view" onclick="switchTab('section-view')" class="px-3 sm:px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 opacity-80 transition-all flex items-center">
-                        <i class="fa-solid fa-list mr-2"></i><span class="hidden sm:inline">My Records</span>
+                    <button onclick="toggleView()" id="nav-btn" class="px-3 sm:px-4 py-2 rounded-md text-sm font-medium bg-blue-900 hover:bg-blue-700 transition-colors flex items-center shadow-sm border border-blue-700">
+                        <i class="fa-solid fa-list mr-2"></i><span>View Uploaded Data</span>
                     </button>
                 </div>
             </div>
@@ -70,11 +84,11 @@
     <main class="flex-grow p-4 sm:p-6 max-w-7xl mx-auto w-full">
         
         <!-- ================= SECTION 1: DATA ENTRY FORM ================= -->
-        <section id="section-entry" class="space-y-6 transition-opacity duration-300">
+        <section id="section-entry" class="space-y-6">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="bg-blue-50 px-4 sm:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h2 id="form-title" class="text-lg sm:text-xl font-bold text-blue-900">Student & Family Registration</h2>
-                    <button onclick="clearForm()" class="text-sm text-gray-500 hover:text-red-600 transition-colors"><i class="fa-solid fa-eraser mr-1"></i>Clear Form</button>
+                    <h2 class="text-lg sm:text-xl font-bold text-blue-900" id="form-title">Student & Family Registration</h2>
+                    <button onclick="clearDraft()" class="text-sm text-gray-500 hover:text-red-600 transition-colors"><i class="fa-solid fa-eraser mr-1"></i>Clear Form</button>
                 </div>
                 
                 <form id="student-form" class="p-4 sm:p-6">
@@ -95,7 +109,7 @@
                                 </div>
                                 <div class="flex-grow space-y-3 w-full">
                                     <input type="text" id="name_student" placeholder="Full Name *" required class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
-                                    <input type="text" id="class_student" placeholder="Class / Grade *" required class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <input type="text" id="class_student" placeholder="Class *" required class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
                                     <input type="text" id="aadhaar_student" placeholder="Aadhaar Number (12 digits)" pattern="\d{12}" required title="12 digit Aadhaar number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
                                     <input type="text" id="phone_student" placeholder="Phone Number (10 digits)" pattern="\d{10}" required title="10 digit Phone number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
                                 </div>
@@ -177,165 +191,38 @@
             </div>
         </section>
 
-        <!-- ================= SECTION 2: VIEW / EDIT DATA ================= -->
-        <section id="section-view" class="space-y-6 hidden transition-opacity duration-300">
+        <!-- ================= SECTION 2: VIEW UPLOADED DATA ================= -->
+        <section id="section-view" class="hidden space-y-6">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h2 class="text-lg sm:text-xl font-bold text-gray-800">My Uploaded Records</h2>
-                    <button onclick="fetchAndDisplayStudents()" class="text-sm text-gray-600 hover:text-blue-600 transition-colors bg-white px-3 py-1.5 rounded-md border shadow-sm flex items-center gap-2 active:bg-gray-50">
-                        <i class="fa-solid fa-rotate-right"></i><span class="hidden sm:inline">Refresh Data</span>
-                    </button>
+                    <h2 class="text-lg sm:text-xl font-bold text-gray-800">Uploaded Records</h2>
+                    <div class="text-sm font-medium text-gray-500 bg-white px-3 py-1.5 rounded-md border shadow-sm">
+                        Total: <span id="stat-total" class="text-blue-700 font-bold ml-1">0</span>
+                    </div>
                 </div>
                 
-                <div class="p-4 bg-white border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div class="relative w-full sm:w-96">
+                <div class="p-4 bg-white border-b border-gray-200">
+                    <div class="relative w-full max-w-md">
                         <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
-                        <input type="text" id="search-input" placeholder="Search by name, aadhaar, phone, class..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-shadow">
-                    </div>
-                    <div class="text-sm font-medium text-gray-500 bg-gray-50 px-4 py-2 rounded-lg border">
-                        Total Records: <span id="stat-total" class="text-blue-700 font-bold text-lg ml-1">0</span>
+                        <input type="text" id="search-input" placeholder="Search by name, phone, class..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-shadow">
                     </div>
                 </div>
 
                 <div class="p-0 sm:p-4 overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[800px]">
+                    <table class="w-full text-left border-collapse min-w-[700px]">
                         <thead>
                             <tr class="bg-gray-50 border-b-2 text-xs uppercase tracking-wider font-bold text-gray-500">
                                 <th class="p-4 w-16">Photo</th>
                                 <th class="p-4">Student Details</th>
-                                <th class="p-4">Academic Details</th>
-                                <th class="p-4">Registered Date</th>
+                                <th class="p-4">Class</th>
                                 <th class="p-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="view-table-body">
-                            <tr><td colspan="5" class="p-12 text-center text-gray-500"><span class="loader align-middle mr-2 border-t-blue-500"></span> Loading your records...</td></tr>
+                            <tr><td colspan="4" class="p-12 text-center text-blue-600"><span class="loader align-middle mr-3 border-t-blue-600"></span> Loading records...</td></tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- DELETE CONFIRMATION MODAL -->
-    <div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm text-center transform transition-all scale-95">
-            <div class="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
-                <i class="fa-solid fa-trash-can"></i>
-            </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Record?</h3>
-            <p class="text-sm text-gray-500 mb-6">This action cannot be undone. The student data will be permanently removed.</p>
-            <div class="flex gap-3">
-                <button onclick="closeDeleteModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-lg transition-colors border border-gray-200">Cancel</button>
-                <button onclick="executeDelete()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-check"></i> Delete
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- FIREBASE LOGIC -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Firebase Configuration & System Setup
-        const userFirebaseConfig = {
-            apiKey: "AIzaSyAgQVEDj0rRZvO5uPKI0uNh18oo1LYtjqk",
-            authDomain: "hostel-b5004.firebaseapp.com",
-            projectId: "hostel-b5004",
-            storageBucket: "hostel-b5004.firebasestorage.app",
-            messagingSenderId: "530068839296",
-            appId: "1:530068839296:web:9b631cd781a4d19ed43f65"
-        };
-        
-        // Use environment config if available, otherwise fallback
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
-        
-        // Initialize Firebase Services
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-        // Global State Variables
-        let currentUserId = null;
-        let imageBlobs = { student: null, father: null, mother: null, guardian: null };
-        let allStudentsData = [];
-        let editingId = null;
-        let studentToDelete = null;
-
-        // Export modules to window for inline HTML onclick/onsubmit handlers to access
-        window.firebaseModules = { collection, addDoc, updateDoc, getDocs, doc, delet                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_father').click()">
-                                        <img id="preview_father" class="w-full h-full object-cover hidden" alt="Father">
-                                        <div id="placeholder_father" class="text-center text-gray-400 text-xs p-2">
-                                            <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="photo_father" accept="image/*" class="hidden" onchange="handleImageSelect(event, 'father')">
-                                </div>
-                                <div class="flex-grow space-y-3 w-full">
-                                    <input type="text" id="name_father" placeholder="Father's Name *" required class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
-                                    <input type="text" id="aadhaar_father" placeholder="Aadhaar Number" pattern="\d{12}" required title="12 digit Aadhaar number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
-                                    <input type="text" id="phone_father" placeholder="Phone Number" pattern="\d{10}" required title="10 digit Phone number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. Mother Details -->
-                        <div class="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-200">
-                            <h3 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">3. Mother's Details</h3>
-                            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                                <div class="w-32 flex-shrink-0 flex flex-col gap-2 mx-auto sm:mx-0">
-                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_mother').click()">
-                                        <img id="preview_mother" class="w-full h-full object-cover hidden" alt="Mother">
-                                        <div id="placeholder_mother" class="text-center text-gray-400 text-xs p-2">
-                                            <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="photo_mother" accept="image/*" class="hidden" onchange="handleImageSelect(event, 'mother')">
-                                </div>
-                                <div class="flex-grow space-y-3 w-full">
-                                    <input type="text" id="name_mother" placeholder="Mother's Name *" required class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
-                                    <input type="text" id="aadhaar_mother" placeholder="Aadhaar Number" pattern="\d{12}" required title="12 digit Aadhaar number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
-                                    <input type="text" id="phone_mother" placeholder="Phone Number" pattern="\d{10}" required title="10 digit Phone number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 4. Guardian Details -->
-                        <div class="bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-200">
-                            <h3 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">4. Local Guardian</h3>
-                            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                                <div class="w-32 flex-shrink-0 flex flex-col gap-2 mx-auto sm:mx-0">
-                                    <div class="w-24 h-24 bg-white border-2 border-dashed border-gray-300 rounded-lg mx-auto flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors" onclick="document.getElementById('photo_guardian').click()">
-                                        <img id="preview_guardian" class="w-full h-full object-cover hidden" alt="Guardian">
-                                        <div id="placeholder_guardian" class="text-center text-gray-400 text-xs p-2">
-                                            <i class="fa-solid fa-camera text-xl mb-1"></i><br>Photo <br><span class="text-[10px]">(Optional)</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="photo_guardian" accept="image/*" class="hidden" onchange="handleImageSelect(event, 'guardian')">
-                                </div>
-                                <div class="flex-grow space-y-3 w-full">
-                                    <input type="text" id="name_guardian" placeholder="Guardian's Name *" required class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
-                                    <input type="text" id="aadhaar_guardian" placeholder="Aadhaar Number" pattern="\d{12}" required title="12 digit Aadhaar number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
-                                    <input type="text" id="phone_guardian" placeholder="Phone Number" pattern="\d{10}" required title="10 digit Phone number" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-8 pt-6 border-t flex justify-end">
-                        <button type="submit" id="submit-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold shadow-md transition-all flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed">
-                            <span id="submit-loader" class="loader hidden mr-3 border-white border-t-transparent"></span>
-                            <span id="submit-text">Submit Registration Data</span>
-                            <i class="fa-solid fa-arrow-right ml-2" id="submit-icon"></i>
-                        </button>
-                    </div>
-                </form>
             </div>
         </section>
 
@@ -345,7 +232,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Configuration
         const firebaseConfig = {
@@ -366,13 +253,15 @@
         let currentUser = null;
         let imageBlobs = { student: null, father: null, mother: null, guardian: null };
         let allStudentsData = [];
+        let editingId = null;
+        let studentToDelete = null;
         const DRAFT_KEY = 'hostel_pass_draft';
 
-        // Export modules to window for inline HTML onclick/onsubmit handlers to access
-        window.firebaseModules = { collection, addDoc, getDocs, doc, deleteDoc };
+        // Export modules to window for inline HTML handlers to access
+        window.firebaseModules = { deleteDoc, doc };
         window.db = db;
 
-        // Sign in anonymously so users can upload files/data without needing an account
+        // Sign in anonymously
         signInAnonymously(auth).catch((error) => {
             console.error("Auth error:", error);
             window.showToast("Connection warning: Could not sign in to database.", "error");
@@ -380,11 +269,42 @@
 
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
+            if(user) {
+                setupRealtimeListener();
+            }
         });
 
         // Initialize Application Events
         setupEventListeners();
         restoreDraft();
+
+        // --- UI NAVIGATION TOGGLE ---
+        window.toggleView = (forceEntry = false) => {
+            const entry = document.getElementById('section-entry');
+            const view = document.getElementById('section-view');
+            const btn = document.getElementById('nav-btn');
+            
+            if (forceEntry || view.classList.contains('hidden') === false) {
+                // Show Entry form
+                entry.classList.remove('hidden');
+                view.classList.add('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-list mr-2"></i><span>View Uploaded Data</span>';
+                if(!forceEntry && !editingId) window.clearDraft(); // Clean form if just switching back
+            } else {
+                // Show View list
+                entry.classList.add('hidden');
+                view.classList.remove('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-plus mr-2"></i><span>New Entry</span>';
+                
+                // Cancel edit mode if they navigate away
+                if(editingId) {
+                    editingId = null;
+                    document.getElementById('form-title').textContent = 'Student & Family Registration';
+                    document.getElementById('submit-text').textContent = 'Submit Registration Data';
+                    window.clearDraft();
+                }
+            }
+        };
 
         // --- UTILITY: TOAST NOTIFICATIONS ---
         window.showToast = function(message, type = 'success') {
@@ -395,8 +315,6 @@
             toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle text-lg' : 'fa-circle-exclamation text-lg'}"></i> <span>${message}</span>`;
             
             container.appendChild(toast);
-            
-            // Auto remove after 3 seconds
             setTimeout(() => {
                 toast.classList.replace('toast-enter', 'toast-exit');
                 setTimeout(() => toast.remove(), 300);
@@ -412,25 +330,21 @@
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
-                    // Create a canvas to crop and compress the image to a passport size square
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const size = 300; // Target Size (Square 300x300)
+                    const size = 300; 
                     canvas.width = size;
                     canvas.height = size;
                     
-                    // Center crop logic
                     const minDim = Math.min(img.width, img.height);
                     const startX = (img.width - minDim) / 2;
                     const startY = (img.height - minDim) / 2;
                     
                     ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, size, size);
                     
-                    // Convert to Base64 String directly (0.7 quality keeps it small for Firestore)
                     const base64String = canvas.toDataURL('image/jpeg', 0.7);
                     imageBlobs[role] = base64String;
                     
-                    // Update UI Preview
                     document.getElementById(`preview_${role}`).src = base64String;
                     document.getElementById(`preview_${role}`).classList.remove('hidden');
                     document.getElementById(`placeholder_${role}`).classList.add('hidden');
@@ -440,30 +354,26 @@
             reader.readAsDataURL(file);
         };
 
-        // --- LOCAL STORAGE DRAFT MANAGEMENT ---
+        // --- DRAFT MANAGEMENT ---
         function setupEventListeners() {
-            // Listen to all text inputs to auto-save draft
             const inputs = document.querySelectorAll('#student-form input[type="text"]');
             inputs.forEach(input => {
-                input.addEventListener('input', saveDraft);
+                input.addEventListener('input', () => {
+                    if(!editingId) saveDraft();
+                });
             });
 
             document.getElementById('student-form').addEventListener('submit', submitForm);
             
-            // Search filter listener
-            const searchInput = document.getElementById('search-input');
-            if(searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    const term = e.target.value.toLowerCase();
-                    const filtered = allStudentsData.filter(item => 
-                        item.student.name.toLowerCase().includes(term) ||
-                        item.student.aadhaar.includes(term) ||
-                        item.student.phone.includes(term) ||
-                        item.student.class.toLowerCase().includes(term)
-                    );
-                    window.renderTable(filtered);
-                });
-            }
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = allStudentsData.filter(item => 
+                    item.student?.name.toLowerCase().includes(term) ||
+                    item.student?.phone.includes(term) ||
+                    item.student?.class.toLowerCase().includes(term)
+                );
+                renderTable(filtered);
+            });
         }
 
         function saveDraft() {
@@ -476,7 +386,7 @@
 
         function restoreDraft() {
             const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
-            if (draft) {
+            if (draft && !editingId) {
                 Object.keys(draft).forEach(key => {
                     const el = document.getElementById(key);
                     if(el) el.value = draft[key];
@@ -485,53 +395,49 @@
         }
 
         window.clearDraft = () => {
-            localStorage.removeItem(DRAFT_KEY);
+            if(!editingId) localStorage.removeItem(DRAFT_KEY);
             document.getElementById('student-form').reset();
             
-            // Reset image previews
             ['student', 'father', 'mother', 'guardian'].forEach(role => {
                 imageBlobs[role] = null;
                 document.getElementById(`preview_${role}`).classList.add('hidden');
                 document.getElementById(`preview_${role}`).src = '';
                 document.getElementById(`placeholder_${role}`).classList.remove('hidden');
             });
+            
+            if(editingId) {
+                editingId = null;
+                document.getElementById('form-title').textContent = 'Student & Family Registration';
+                document.getElementById('submit-text').textContent = 'Submit Registration Data';
+            }
         };
 
-        // --- FORM SUBMISSION (FIREBASE) ---
+        // --- FORM SUBMISSION ---
         async function submitForm(e) {
             e.preventDefault();
             
-            if (!currentUser) {
-                return window.showToast("Not connected to database. Please refresh or check connection.", "error");
-            }
+            if (!currentUser) return window.showToast("Not connected to database.", "error");
 
             const btn = document.getElementById('submit-btn');
             const text = document.getElementById('submit-text');
             const loader = document.getElementById('submit-loader');
             
-            // Lock UI
             btn.disabled = true;
             text.textContent = 'Saving Record...';
             loader.classList.remove('hidden');
 
             try {
-                const { collection, addDoc } = window.firebaseModules;
-
-                // Helper to get image (Base64 or Placeholder URL)
                 const getImg = (role) => {
                     if (imageBlobs[role]) return imageBlobs[role];
                     return `https://placehold.co/300x300/e2e8f0/64748b?text=${role.toUpperCase()}`;
                 };
 
-                // Helper to safely fetch input text
                 const getVal = (id) => document.getElementById(id).value.trim();
 
-                // Construct final Document Data (using Base64 directly)
                 const docData = {
                     student: {
                         name: getVal('name_student'),
                         class: getVal('class_student'),
-                        roll: getVal('roll_student'),
                         aadhaar: getVal('aadhaar_student'),
                         phone: getVal('phone_student'),
                         photo: getImg('student')
@@ -539,32 +445,158 @@
                     father: { name: getVal('name_father'), aadhaar: getVal('aadhaar_father'), phone: getVal('phone_father'), photo: getImg('father') },
                     mother: { name: getVal('name_mother'), aadhaar: getVal('aadhaar_mother'), phone: getVal('phone_mother'), photo: getImg('mother') },
                     guardian: { name: getVal('name_guardian'), aadhaar: getVal('aadhaar_guardian'), phone: getVal('phone_guardian'), photo: getImg('guardian') },
-                    createdAt: Date.now()
                 };
 
-                // Save to Firestore Database
-                await addDoc(collection(window.db, 'students'), docData);
+                if (editingId) {
+                    docData.updatedAt = Date.now();
+                    await updateDoc(doc(window.db, 'students', editingId), docData);
+                    window.showToast("Student data updated successfully!");
+                } else {
+                    docData.createdAt = Date.now();
+                    await addDoc(collection(window.db, 'students'), docData);
+                    window.showToast("Student data registered successfully!");
+                }
                 
-                // Feedback
-                window.showToast("Student pass data registered successfully!");
-                
-                // Reset form and UI
                 window.clearDraft(); 
+                window.toggleView(); // Auto switch to view tab
 
             } catch (error) {
                 console.error("Submission Error Details:", error);
                 if (error.message.includes('missing or insufficient permissions')) {
-                    window.showToast("Upload failed: Firebase Security Rules are blocking access.", "error");
+                    window.showToast("Upload failed: Check Firebase Security Rules.", "error");
                 } else {
                     window.showToast("Error saving data: " + error.message, "error");
                 }
             } finally {
-                // Unlock UI regardless of success or failure
                 btn.disabled = false;
-                text.textContent = 'Submit Registration Data';
+                text.textContent = editingId ? 'Update Registration Data' : 'Submit Registration Data';
                 loader.classList.add('hidden');
             }
         }
+
+        // --- FETCH & RENDER DATA ---
+        function setupRealtimeListener() {
+            const q = query(collection(window.db, 'students'), orderBy('createdAt', 'desc'));
+            onSnapshot(q, (snapshot) => {
+                allStudentsData = [];
+                snapshot.forEach((doc) => {
+                    allStudentsData.push({ id: doc.id, ...doc.data() });
+                });
+                document.getElementById('stat-total').textContent = allStudentsData.length;
+                renderTable(allStudentsData);
+            }, (error) => {
+                console.error("Snapshot error:", error);
+                document.getElementById('view-table-body').innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500 bg-red-50 border border-red-100 rounded">Error loading data. Verify permissions.</td></tr>`;
+            });
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('view-table-body');
+            tbody.innerHTML = ''; 
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-12 text-center text-gray-500 bg-gray-50">No student records found.</td></tr>';
+                return;
+            }
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-blue-50/50 transition-colors group';
+                
+                const photoSrc = item.student?.photo || `https://placehold.co/300x300/e2e8f0/64748b?text=NO+PHOTO`;
+                const sName = item.student?.name || 'Unknown';
+                const sPhone = item.student?.phone || 'N/A';
+                const sClass = item.student?.class || 'N/A';
+
+                tr.innerHTML = `
+                    <td class="p-3 sm:p-4 align-middle">
+                        <img src="${photoSrc}" class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover border border-gray-300 shadow-sm" alt="Photo">
+                    </td>
+                    <td class="p-3 sm:p-4 align-middle">
+                        <div class="font-bold text-gray-900">${sName}</div>
+                        <div class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-phone mr-1"></i> ${sPhone}</div>
+                    </td>
+                    <td class="p-3 sm:p-4 text-sm text-gray-700 align-middle">
+                        <span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-md text-xs font-bold border border-blue-200">Class ${sClass}</span>
+                    </td>
+                    <td class="p-3 sm:p-4 text-right align-middle space-x-1 opacity-100 sm:opacity-50 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        <button onclick="editRecord('${item.id}')" class="bg-white text-blue-600 hover:bg-blue-50 border border-gray-300 px-3 py-1.5 rounded-md text-sm transition-colors shadow-sm" title="Edit Record">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="promptDelete('${item.id}')" class="bg-white text-red-600 hover:bg-red-50 border border-gray-300 px-3 py-1.5 rounded-md text-sm transition-colors shadow-sm" title="Delete Record">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- EDIT LOGIC ---
+        window.editRecord = (docId) => {
+            const data = allStudentsData.find(d => d.id === docId);
+            if(!data) return;
+
+            editingId = docId;
+            document.getElementById('form-title').textContent = 'Edit Registration Data';
+            document.getElementById('submit-text').textContent = 'Update Registration Data';
+
+            // Populate Fields
+            ['student', 'father', 'mother', 'guardian'].forEach(role => {
+                if(data[role]) {
+                    if(document.getElementById(`name_${role}`)) document.getElementById(`name_${role}`).value = data[role].name || '';
+                    if(document.getElementById(`aadhaar_${role}`)) document.getElementById(`aadhaar_${role}`).value = data[role].aadhaar || '';
+                    if(document.getElementById(`phone_${role}`)) document.getElementById(`phone_${role}`).value = data[role].phone || '';
+                    if(role === 'student' && document.getElementById(`class_student`)) document.getElementById(`class_student`).value = data[role].class || '';
+
+                    // Populate images
+                    if(data[role].photo && !data[role].photo.includes('placehold.co')) {
+                        imageBlobs[role] = data[role].photo;
+                        document.getElementById(`preview_${role}`).src = data[role].photo;
+                        document.getElementById(`preview_${role}`).classList.remove('hidden');
+                        document.getElementById(`placeholder_${role}`).classList.add('hidden');
+                    } else {
+                        imageBlobs[role] = null;
+                        document.getElementById(`preview_${role}`).src = '';
+                        document.getElementById(`preview_${role}`).classList.add('hidden');
+                        document.getElementById(`placeholder_${role}`).classList.remove('hidden');
+                    }
+                }
+            });
+            
+            // Switch view
+            window.toggleView(true);
+        };
+
+        // --- DELETE LOGIC ---
+        window.promptDelete = (docId) => {
+            studentToDelete = docId;
+            const modal = document.getElementById('delete-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => { modal.querySelector('div').classList.remove('scale-95'); modal.querySelector('div').classList.add('scale-100'); }, 10);
+        };
+
+        window.closeDeleteModal = () => {
+            studentToDelete = null;
+            const modal = document.getElementById('delete-modal');
+            modal.querySelector('div').classList.remove('scale-100'); 
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 150);
+        };
+
+        window.executeDelete = async () => {
+            if(!studentToDelete) return;
+            try {
+                await deleteDoc(doc(window.db, 'students', studentToDelete));
+                window.showToast("Record permanently deleted.");
+            } catch (error) {
+                console.error("Delete error:", error);
+                window.showToast("Error deleting record.", "error");
+            } finally {
+                window.closeDeleteModal();
+            }
+        };
 
     </script>
 </body>
