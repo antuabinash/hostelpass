@@ -34,8 +34,12 @@
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(4px);}
         .modal-content { background:white; padding:30px; border-radius:16px; width:90%; max-width:800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2);}
         
-        /* Dashboard Image Preview Crop (Just for web UI) */
+        /* Dashboard Image Preview Crop */
         .dashboard-photo { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
+        
+        /* Editor Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="text-gray-800 min-h-screen flex flex-col">
@@ -78,9 +82,9 @@
     </div>
 
     <!-- MAIN APP LAYOUT -->
-    <div id="admin-layout" class="hidden flex-col flex-grow w-full">
-        <nav class="bg-blue-900 text-white shadow-md sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div id="admin-layout" class="hidden flex-col flex-grow w-full h-screen overflow-hidden">
+        <nav class="bg-blue-900 text-white shadow-md z-40 flex-shrink-0">
+            <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-shield-halved text-2xl text-blue-300"></i>
@@ -88,8 +92,11 @@
                         <span id="aiStatus" class="ml-4 text-xs bg-blue-800 px-3 py-1 rounded-full font-mono border border-blue-700 hidden sm:inline-block shadow-inner">⏳ AI Pending</span>
                     </div>
                     <div class="flex gap-3 items-center">
+                        <button onclick="openSettings()" class="px-3 sm:px-4 py-2 rounded-md text-sm font-medium bg-white text-blue-900 hover:bg-gray-100 transition-colors hidden sm:flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-sliders"></i> Settings
+                        </button>
                         <button onclick="executeZipDownload()" class="px-3 sm:px-4 py-2 rounded-md text-sm font-medium bg-green-600 hover:bg-green-500 border border-green-500 transition-colors hidden sm:flex items-center gap-2 shadow-sm">
-                            <i class="fa-solid fa-file-zipper"></i> Generate All (ZIP)
+                            <i class="fa-solid fa-file-zipper"></i> Generate ZIP
                         </button>
                         <button onclick="logoutAdmin()" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-red-600 transition-colors flex items-center gap-2">
                             <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span>
@@ -99,16 +106,18 @@
             </div>
         </nav>
 
-        <main class="flex-grow p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <main class="flex-grow p-4 sm:p-6 max-w-[1400px] mx-auto w-full flex flex-col overflow-hidden">
+            
+            <!-- DASHBOARD VIEW -->
+            <div id="dashboard-view" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
+                <div class="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
                     <h2 class="text-lg sm:text-xl font-bold text-gray-800">Student Database</h2>
                     <button onclick="fetchAndDisplayStudents()" class="text-sm text-gray-600 hover:text-blue-600 bg-white px-3 py-1.5 rounded-md border flex items-center gap-2 shadow-sm">
                         <i class="fa-solid fa-rotate-right"></i><span class="hidden sm:inline">Refresh Data</span>
                     </button>
                 </div>
                 
-                <div class="p-4 bg-white border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="p-4 bg-white border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4 flex-shrink-0">
                     <div class="relative w-full sm:w-96">
                         <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
                         <input type="text" id="search-input" placeholder="Search by name, phone, class..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -118,9 +127,9 @@
                     </div>
                 </div>
 
-                <div class="p-0 sm:p-4 overflow-x-auto">
+                <div class="p-0 sm:p-4 overflow-y-auto flex-grow custom-scroll">
                     <table class="w-full text-left border-collapse min-w-[800px]">
-                        <thead>
+                        <thead class="sticky top-0 bg-white z-10 shadow-sm">
                             <tr class="bg-gray-50 border-b-2 text-xs uppercase tracking-wider font-bold text-gray-500">
                                 <th class="p-4 w-16">Photo</th>
                                 <th class="p-4">Student Details</th>
@@ -135,6 +144,35 @@
                     </table>
                 </div>
             </div>
+
+            <!-- LAYOUT EDITOR / SETTINGS VIEW -->
+            <div id="settings-view" class="hidden flex-col w-full h-full">
+                <div class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4 gap-4 flex-shrink-0">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-sliders text-blue-600"></i> Canvas Layout Editor</h2>
+                        <p class="text-xs text-gray-500 mt-1">Drag the boxes and text below to match your uploaded <b>hoste_pass_2.jpg</b> template perfectly.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="closeSettings()" class="text-gray-600 hover:text-blue-600 font-semibold py-2 px-4 rounded-lg bg-gray-100 border transition-colors"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button onclick="resetSettings()" class="text-red-600 hover:text-red-700 font-semibold py-2 px-4 rounded-lg bg-red-50 border border-red-100 transition-colors"><i class="fa-solid fa-rotate-left"></i> Reset Defaults</button>
+                        <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-colors"><i class="fa-solid fa-save"></i> Save Layout</button>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row gap-4 flex-grow overflow-hidden">
+                    <!-- Left Sidebar Properties -->
+                    <div class="w-full md:w-80 bg-white rounded-xl shadow-sm border border-gray-200 p-4 overflow-y-auto custom-scroll flex-shrink-0" id="editor-sidebar">
+                       <!-- JS Injects Inputs Here -->
+                    </div>
+                    <!-- Right Canvas Area -->
+                    <div class="flex-grow bg-gray-200 rounded-xl overflow-hidden flex justify-center items-center relative border border-gray-300 shadow-inner p-4">
+                        <div class="absolute top-4 right-4 bg-gray-900 bg-opacity-75 text-white px-3 py-1.5 rounded text-sm z-10 pointer-events-none shadow-md backdrop-blur-sm border border-gray-600">
+                            <i class="fa-solid fa-hand-pointer mr-1"></i> Drag elements to align
+                        </div>
+                        <canvas id="editorCanvas" class="max-w-full max-h-full object-contain shadow-2xl cursor-move border border-gray-400 bg-white"></canvas>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -146,6 +184,9 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // ---------------------------------------------------------
+        // 1. FIREBASE SETUP
+        // ---------------------------------------------------------
         const firebaseConfig = {
             apiKey: "AIzaSyAgQVEDj0rRZvO5uPKI0uNh18oo1LYtjqk",
             authDomain: "hostel-b5004.firebaseapp.com",
@@ -166,70 +207,247 @@
         onAuthStateChanged(auth, (user) => {});
 
         // ---------------------------------------------------------
-        // PASS CONFIGURATION (EDIT PIXELS HERE FOR PERFECT ALIGNMENT)
+        // 2. PASS CONFIGURATION & DRAG EDITOR ENGINE
         // ---------------------------------------------------------
-        // This configuration drives the entire Canvas Engine.
-        // If a text line is misaligned, simply change the X or Y value below.
         
-        const PASS_CONFIG = {
-            bgUrl: 'hoste_pass_2.jpg', // MUST BE IN SAME DIRECTORY
-            width: 1754,
-            height: 1240,
+        // These defaults map perfectly to the 1754 x 1240 layout requested
+        const DEFAULT_CONFIG = {
+            bgUrl: 'hoste_pass_2.jpg', width: 1754, height: 1240,
+            font: '600 27px Arial', textColor: '#0f2b5b', textBaseline: 'middle',
+            qr_x: 1390, qr_y: 60, qr_size: 200,
             
-            // Global Text Settings
-            font: '600 27px Arial',
-            textColor: '#0f2b5b', // Dark Navy Blue matching template
-            textBaseline: 'middle',
-
-            // QR Code Box Coordinates
-            qr: { x: 1040, y: 88, size: 218 },
-
-            // Top Header School Information (If you want to auto-fill the header)
-            school: {
-                nameX: 250, nameY: 175, nameFont: 'bold 50px Arial',
-                addrX: 300, addrY: 255, subFont: '24px Arial', textColor: '#1f2937',
-                phoneX: 300, phoneY: 305,
-                emailX: 550, emailY: 305
-            },
-
-            // Student Quadrant Coordinates
-            student: {
-                photo: { x: 60, y: 450, w: 226, h: 295 },
-                textX: 585, // X coordinate for Name/Class/Aadhaar Values
-                nameY: 488, // Y center for Name
-                classY: 560, // Y center for Class
-                aadhaarY: 632, // Y center for Aadhaar
-                phoneY: 704  // Y center for Phone
-            },
+            student_photo_x: 70, student_photo_y: 430, student_photo_w: 230, student_photo_h: 290,
+            student_name_x: 550, student_name_y: 470, student_class_x: 550, student_class_y: 540, student_aadhaar_x: 550, student_aadhaar_y: 610, student_phone_x: 550, student_phone_y: 680,
             
-            // Father Quadrant Coordinates
-            father: {
-                photo: { x: 935, y: 450, w: 226, h: 295 },
-                textX: 1460, 
-                nameY: 488, 
-                aadhaarY: 560, // Notice Father skips 'class', so Aadhaar aligns with Student's Class line
-                phoneY: 632  // Father Phone aligns with Student's Aadhaar line
-            },
+            father_photo_x: 935, father_photo_y: 430, father_photo_w: 230, father_photo_h: 290,
+            father_name_x: 1415, father_name_y: 470, father_aadhaar_x: 1415, father_aadhaar_y: 540, father_phone_x: 1415, father_phone_y: 610,
+            
+            mother_photo_x: 70, mother_photo_y: 830, mother_photo_w: 230, mother_photo_h: 290,
+            mother_name_x: 550, mother_name_y: 870, mother_aadhaar_x: 550, mother_aadhaar_y: 940, mother_phone_x: 550, mother_phone_y: 1010,
+            
+            guardian_photo_x: 935, guardian_photo_y: 830, guardian_photo_w: 230, guardian_photo_h: 290,
+            guardian_name_x: 1415, guardian_name_y: 870, guardian_aadhaar_x: 1415, guardian_aadhaar_y: 940, guardian_phone_x: 1415, guardian_phone_y: 1010
+        };
 
-            // Mother Quadrant Coordinates
-            mother: {
-                photo: { x: 60, y: 818, w: 226, h: 295 },
-                textX: 585, 
-                nameY: 858, 
-                aadhaarY: 930, 
-                phoneY: 1002
-            },
+        // Load saved coordinates from local storage, or fallback to defaults
+        window.PASS_CONFIG = JSON.parse(localStorage.getItem('hostelPassSettings')) || {...DEFAULT_CONFIG};
 
-            // Guardian Quadrant Coordinates
-            guardian: {
-                photo: { x: 935, y: 818, w: 226, h: 295 },
-                textX: 1460, 
-                nameY: 858, 
-                aadhaarY: 930, 
-                phoneY: 1002
+        // Define which fields are draggable in the UI
+        const layoutFields = [
+            { id: 'qr', type: 'rect', text: 'QR', color: 'rgba(0,0,0,0.3)', props: {x: 'qr_x', y: 'qr_y', w: 'qr_size'} },
+            
+            { id: 'student_photo', type: 'rect', text: 'STUDENT', color: 'rgba(59,130,246,0.3)', props: {x: 'student_photo_x', y: 'student_photo_y', w: 'student_photo_w', h: 'student_photo_h'} },
+            { id: 'student_name', type: 'text', text: 'Student Name', props: {x: 'student_name_x', y: 'student_name_y'} },
+            { id: 'student_class', type: 'text', text: 'Student Class', props: {x: 'student_class_x', y: 'student_class_y'} },
+            { id: 'student_aadhaar', type: 'text', text: 'Student Aadhaar', props: {x: 'student_aadhaar_x', y: 'student_aadhaar_y'} },
+            { id: 'student_phone', type: 'text', text: 'Student Phone', props: {x: 'student_phone_x', y: 'student_phone_y'} },
+            
+            { id: 'father_photo', type: 'rect', text: 'FATHER', color: 'rgba(59,130,246,0.3)', props: {x: 'father_photo_x', y: 'father_photo_y', w: 'father_photo_w', h: 'father_photo_h'} },
+            { id: 'father_name', type: 'text', text: 'Father Name', props: {x: 'father_name_x', y: 'father_name_y'} },
+            { id: 'father_aadhaar', type: 'text', text: 'Father Aadhaar', props: {x: 'father_aadhaar_x', y: 'father_aadhaar_y'} },
+            { id: 'father_phone', type: 'text', text: 'Father Phone', props: {x: 'father_phone_x', y: 'father_phone_y'} },
+
+            { id: 'mother_photo', type: 'rect', text: 'MOTHER', color: 'rgba(59,130,246,0.3)', props: {x: 'mother_photo_x', y: 'mother_photo_y', w: 'mother_photo_w', h: 'mother_photo_h'} },
+            { id: 'mother_name', type: 'text', text: 'Mother Name', props: {x: 'mother_name_x', y: 'mother_name_y'} },
+            { id: 'mother_aadhaar', type: 'text', text: 'Mother Aadhaar', props: {x: 'mother_aadhaar_x', y: 'mother_aadhaar_y'} },
+            { id: 'mother_phone', type: 'text', text: 'Mother Phone', props: {x: 'mother_phone_x', y: 'mother_phone_y'} },
+
+            { id: 'guardian_photo', type: 'rect', text: 'GUARDIAN', color: 'rgba(59,130,246,0.3)', props: {x: 'guardian_photo_x', y: 'guardian_photo_y', w: 'guardian_photo_w', h: 'guardian_photo_h'} },
+            { id: 'guardian_name', type: 'text', text: 'Guardian Name', props: {x: 'guardian_name_x', y: 'guardian_name_y'} },
+            { id: 'guardian_aadhaar', type: 'text', text: 'Guardian Aadhaar', props: {x: 'guardian_aadhaar_x', y: 'guardian_aadhaar_y'} },
+            { id: 'guardian_phone', type: 'text', text: 'Guardian Phone', props: {x: 'guardian_phone_x', y: 'guardian_phone_y'} }
+        ];
+
+        let editorCanvas = document.getElementById('editorCanvas');
+        let editorCtx = editorCanvas.getContext('2d');
+        let isDragging = false, draggedField = null, hoveredField = null;
+        let dragOffsetX = 0, dragOffsetY = 0;
+
+        window.openSettings = () => {
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('settings-view').classList.remove('hidden');
+            document.getElementById('settings-view').classList.add('flex');
+            populateSidebar();
+            drawEditorCanvas();
+        };
+
+        window.closeSettings = () => {
+            document.getElementById('settings-view').classList.add('hidden');
+            document.getElementById('settings-view').classList.remove('flex');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+        };
+
+        window.saveSettings = () => {
+            localStorage.setItem('hostelPassSettings', JSON.stringify(window.PASS_CONFIG));
+            window.showToast('Settings saved successfully!');
+            window.closeSettings();
+        };
+
+        window.resetSettings = () => {
+            if(confirm("Reset all coordinates to factory defaults?")) {
+                window.PASS_CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+                populateSidebar();
+                drawEditorCanvas();
+                window.showToast('Reset to defaults. Remember to click Save.');
             }
         };
 
+        window.updateConfigFromInput = (prop) => {
+            const val = parseInt(document.getElementById('inp_' + prop).value) || 0;
+            window.PASS_CONFIG[prop] = val;
+            drawEditorCanvas();
+        };
+
+        function populateSidebar() {
+            const sidebar = document.getElementById('editor-sidebar');
+            let html = '<h3 class="font-bold text-gray-700 mb-3 border-b pb-2 sticky top-0 bg-white z-10">Coordinates Setup</h3>';
+            
+            layoutFields.forEach(f => {
+                html += `
+                <div class="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 transition-colors" id="panel_${f.id}">
+                    <div class="font-semibold text-sm mb-2 text-blue-800">${f.text} Properties</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="text-xs text-gray-500">X Position</label><input type="number" id="inp_${f.props.x}" value="${window.PASS_CONFIG[f.props.x]}" class="w-full border rounded p-1.5 text-sm" oninput="updateConfigFromInput('${f.props.x}')"></div>
+                        <div><label class="text-xs text-gray-500">Y Position</label><input type="number" id="inp_${f.props.y}" value="${window.PASS_CONFIG[f.props.y]}" class="w-full border rounded p-1.5 text-sm" oninput="updateConfigFromInput('${f.props.y}')"></div>
+                        ${f.type === 'rect' ? `
+                            <div><label class="text-xs text-gray-500">Width</label><input type="number" id="inp_${f.props.w}" value="${window.PASS_CONFIG[f.props.w]}" class="w-full border rounded p-1.5 text-sm" oninput="updateConfigFromInput('${f.props.w}')"></div>
+                            ${f.props.h ? `<div><label class="text-xs text-gray-500">Height</label><input type="number" id="inp_${f.props.h}" value="${window.PASS_CONFIG[f.props.h]}" class="w-full border rounded p-1.5 text-sm" oninput="updateConfigFromInput('${f.props.h}')"></div>` : ''}
+                        ` : ''}
+                    </div>
+                </div>`;
+            });
+            sidebar.innerHTML = html;
+        }
+
+        async function drawEditorCanvas() {
+            editorCanvas.width = window.PASS_CONFIG.width;
+            editorCanvas.height = window.PASS_CONFIG.height;
+            editorCtx.fillStyle = '#fff'; editorCtx.fillRect(0,0,editorCanvas.width,editorCanvas.height);
+            
+            try {
+                const bgImg = await loadCachedImage(window.PASS_CONFIG.bgUrl);
+                if(bgImg) editorCtx.drawImage(bgImg, 0, 0, editorCanvas.width, editorCanvas.height);
+            } catch(e) {
+                editorCtx.fillStyle = '#f87171'; editorCtx.fillRect(0,0,editorCanvas.width,editorCanvas.height);
+                editorCtx.fillStyle = '#fff'; editorCtx.font = 'bold 40px Arial'; editorCtx.textAlign = 'center';
+                editorCtx.fillText("Ensure 'hoste_pass_2.jpg' is in the same folder.", editorCanvas.width/2, editorCanvas.height/2);
+            }
+            
+            editorCtx.font = window.PASS_CONFIG.font;
+            editorCtx.textBaseline = window.PASS_CONFIG.textBaseline;
+
+            // Draw visual editor elements
+            layoutFields.forEach(f => {
+                const isHover = (f.id === draggedField?.id || f.id === hoveredField?.id);
+                const alpha = isHover ? 0.8 : 0.4;
+                
+                if (f.type === 'rect') {
+                    const x = window.PASS_CONFIG[f.props.x], y = window.PASS_CONFIG[f.props.y];
+                    const w = window.PASS_CONFIG[f.props.w], h = window.PASS_CONFIG[f.props.h] || window.PASS_CONFIG[f.props.w];
+                    
+                    editorCtx.fillStyle = f.color.replace('0.3', alpha);
+                    editorCtx.fillRect(x, y, w, h);
+                    editorCtx.strokeStyle = isHover ? '#ef4444' : '#2563eb';
+                    editorCtx.lineWidth = isHover ? 4 : 2;
+                    editorCtx.strokeRect(x, y, w, h);
+                    
+                    editorCtx.fillStyle = isHover ? '#fff' : '#000'; editorCtx.font = 'bold 24px Arial'; editorCtx.textAlign='center';
+                    editorCtx.fillText(f.text, x + w/2, y + h/2);
+                } else {
+                    const x = window.PASS_CONFIG[f.props.x], y = window.PASS_CONFIG[f.props.y];
+                    editorCtx.font = window.PASS_CONFIG.font;
+                    editorCtx.fillStyle = isHover ? '#ef4444' : window.PASS_CONFIG.textColor;
+                    editorCtx.textAlign = 'left';
+                    editorCtx.fillText(f.text, x, y);
+                    
+                    editorCtx.fillStyle = isHover ? '#ef4444' : '#3b82f6';
+                    editorCtx.beginPath(); editorCtx.arc(x, y, 6, 0, Math.PI*2); editorCtx.fill();
+                }
+            });
+        }
+
+        function getEditorMousePos(evt) {
+            const rect = editorCanvas.getBoundingClientRect();
+            const scaleX = editorCanvas.width / rect.width;
+            const scaleY = editorCanvas.height / rect.height;
+            const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+            const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+            return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+        }
+
+        function hitTestEditor(x, y) {
+            editorCtx.font = window.PASS_CONFIG.font;
+            // Reverse loop to grab topmost items first
+            for (let i = layoutFields.length - 1; i >= 0; i--) {
+                const f = layoutFields[i];
+                const fx = Number(window.PASS_CONFIG[f.props.x]);
+                const fy = Number(window.PASS_CONFIG[f.props.y]);
+                
+                if (f.type === 'rect') {
+                    const fw = Number(window.PASS_CONFIG[f.props.w]);
+                    const fh = Number(window.PASS_CONFIG[f.props.h] || window.PASS_CONFIG[f.props.w]);
+                    if (x >= fx && x <= fx + fw && y >= fy && y <= fy + fh) return f;
+                } else {
+                    const tw = editorCtx.measureText(f.text).width;
+                    const th = 40; // Approx height
+                    if (x >= fx - 10 && x <= fx + tw + 10 && y >= fy - th/2 && y <= fy + th/2) return f;
+                }
+            }
+            return null;
+        }
+
+        editorCanvas.addEventListener('mousedown', (e) => {
+            const pos = getEditorMousePos(e);
+            const hit = hitTestEditor(pos.x, pos.y);
+            if (hit) {
+                isDragging = true;
+                draggedField = hit;
+                dragOffsetX = pos.x - window.PASS_CONFIG[hit.props.x];
+                dragOffsetY = pos.y - window.PASS_CONFIG[hit.props.y];
+                editorCanvas.style.cursor = 'grabbing';
+                e.preventDefault();
+                
+                // Highlight Sidebar
+                document.querySelectorAll('#editor-sidebar > div').forEach(el => el.classList.remove('border-blue-500', 'bg-blue-50'));
+                const panel = document.getElementById('panel_' + hit.id);
+                if(panel) {
+                    panel.classList.add('border-blue-500', 'bg-blue-50');
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+
+        editorCanvas.addEventListener('mousemove', (e) => {
+            const pos = getEditorMousePos(e);
+            if (isDragging && draggedField) {
+                window.PASS_CONFIG[draggedField.props.x] = Math.round(pos.x - dragOffsetX);
+                window.PASS_CONFIG[draggedField.props.y] = Math.round(pos.y - dragOffsetY);
+                
+                document.getElementById('inp_' + draggedField.props.x).value = window.PASS_CONFIG[draggedField.props.x];
+                document.getElementById('inp_' + draggedField.props.y).value = window.PASS_CONFIG[draggedField.props.y];
+                
+                requestAnimationFrame(drawEditorCanvas);
+                e.preventDefault();
+            } else {
+                const hit = hitTestEditor(pos.x, pos.y);
+                if (hit !== hoveredField) {
+                    hoveredField = hit;
+                    editorCanvas.style.cursor = hit ? 'grab' : 'move';
+                    requestAnimationFrame(drawEditorCanvas);
+                }
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false; draggedField = null; editorCanvas.style.cursor = 'move';
+                requestAnimationFrame(drawEditorCanvas);
+            }
+        });
+
+        // ---------------------------------------------------------
+        // 3. MEDIAPIPE FACE DETECTOR (AI CROP)
+        // ---------------------------------------------------------
         let FaceDetector = null, FilesetResolver = null, faceDetector = null;
         let aiStatus = 'pending';
 
@@ -258,12 +476,15 @@
             } catch(err) { 
                 console.error("AI Error", err);
                 aiStatus = 'failed'; 
-                document.getElementById('aiStatus').innerHTML = "⚠️ AI Failed (Basic Crop)";
+                document.getElementById('aiStatus').innerHTML = "⚠️ AI Failed (Basic Center Crop)";
                 document.getElementById('aiStatus').classList.replace('bg-blue-800', 'bg-red-700');
             }
         }
         initializeFaceDetector();
 
+        // ---------------------------------------------------------
+        // 4. UI & AUTH LOGIC
+        // ---------------------------------------------------------
         window.checkPassword = () => {
             if(document.getElementById('admin-pwd').value === 'admin') {
                 document.getElementById('login-modal').classList.add('hidden'); document.getElementById('login-modal').classList.remove('flex');
@@ -287,7 +508,7 @@
 
         window.fetchAndDisplayStudents = async () => {
             const tbody = document.getElementById('view-table-body');
-            tbody.innerHTML = '<tr><td colspan="5" class="p-12 text-center text-blue-600"><span class="loader align-middle mr-3 border-t-blue-500"></span> Fetching secure records...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="p-12 text-center text-blue-600"><span class="loader align-middle mr-3"></span> Fetching secure records...</td></tr>';
             try {
                 const querySnapshot = await getDocs(collection(window.db, 'students'));
                 window.allStudentsData = [];
@@ -296,7 +517,7 @@
                 document.getElementById('stat-total').textContent = window.allStudentsData.length;
                 window.renderTable(window.allStudentsData);
             } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500 bg-red-50 border border-red-100 rounded-lg m-4">Error loading data. Verify Firebase connection.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500">Error loading data. Verify Firebase connection.</td></tr>`;
             }
         };
 
@@ -325,13 +546,16 @@
                     </td>
                     <td class="p-3 sm:p-4 text-sm text-gray-500 align-middle font-medium">${date}</td>
                     <td class="p-3 sm:p-4 text-right align-middle space-x-2">
-                        <button onclick="previewNativeCanvas('${item.id}')" class="bg-white text-blue-600 hover:bg-blue-50 hover:border-blue-300 border border-gray-300 px-3 py-1.5 rounded-md text-sm font-semibold shadow-sm transition-all"><i class="fa-solid fa-eye"></i> Preview Print</button>
+                        <button onclick="previewNativeCanvas('${item.id}')" class="bg-white text-blue-600 hover:bg-blue-50 border border-gray-300 px-3 py-1.5 rounded-md text-sm font-semibold shadow-sm"><i class="fa-solid fa-eye"></i> Preview Print</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         };
 
+        // ---------------------------------------------------------
+        // 5. NATIVE CANVAS FINAL DRAWING ENGINE (ZIP / PREVIEW)
+        // ---------------------------------------------------------
         const globalImageCache = {};
         async function loadCachedImage(url) {
             if (!url) return null;
@@ -339,81 +563,47 @@
             const img = new Image(); img.crossOrigin = "Anonymous"; img.src = url;
             await new Promise((resolve, reject) => { 
                 img.onload = resolve; 
-                img.onerror = () => reject(new Error(`Failed to load image: ${url}`)); 
+                img.onerror = () => reject(new Error(`Failed to load image`)); 
             });
             globalImageCache[url] = img;
             return img;
         }
 
-        // Custom function to draw images with slightly rounded corners (optional premium look)
-        function drawRoundedImage(ctx, img, sx, sy, sw, sh, dx, dy, dw, dh, radius = 8) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(dx + radius, dy);
-            ctx.lineTo(dx + dw - radius, dy);
-            ctx.quadraticCurveTo(dx + dw, dy, dx + dw, dy + radius);
-            ctx.lineTo(dx + dw, dy + dh - radius);
-            ctx.quadraticCurveTo(dx + dw, dy + dh, dx + dw - radius, dy + dh);
-            ctx.lineTo(dx + radius, dy + dh);
-            ctx.quadraticCurveTo(dx, dy + dh, dx, dy + dh - radius);
-            ctx.lineTo(dx, dy + radius);
-            ctx.quadraticCurveTo(dx, dy, dx + radius, dy);
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
-            ctx.restore();
-        }
-
         async function drawCanvasPass(record) {
             const canvas = document.getElementById('cardCanvas');
             const ctx = canvas.getContext('2d');
-            const CFG = PASS_CONFIG;
+            const CFG = window.PASS_CONFIG; // Grab dynamic user settings
             
             canvas.width = CFG.width; 
             canvas.height = CFG.height;
 
-            // 1. Load and Draw the Physical Background Template
+            // 1. Load Background Template
             try {
                 const bgImg = await loadCachedImage(CFG.bgUrl);
                 ctx.drawImage(bgImg, 0, 0, CFG.width, CFG.height);
             } catch(e) {
-                console.warn("Background template not found. Drawing fallback background.", e);
                 ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, CFG.width, CFG.height);
                 ctx.fillStyle = 'red'; ctx.font = 'bold 40px Arial'; ctx.textAlign = 'center';
-                ctx.fillText("TEMPLATE MISSING", CFG.width/2, CFG.height/2);
-                ctx.font = '24px Arial'; ctx.fillText(`Please place '${CFG.bgUrl}' in the same folder.`, CFG.width/2, CFG.height/2 + 50);
-                return await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95)); // Exit early
+                ctx.fillText("TEMPLATE MISSING: " + CFG.bgUrl, CFG.width/2, CFG.height/2);
+                return await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95)); 
             }
 
-            // 2. Draw the Dynamic QR Code
+            // 2. Draw Dynamic QR Code
             let qrText = `HOSTEL PASS\nSTU: ${record.student?.name||''}\nID: ${record.student?.aadhaar||''}`;
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrText)}`;
             try {
                 const qrImg = await loadCachedImage(qrUrl);
-                if(qrImg) ctx.drawImage(qrImg, CFG.qr.x, CFG.qr.y, CFG.qr.size, CFG.qr.size);
+                if(qrImg) ctx.drawImage(qrImg, CFG.qr_x, CFG.qr_y, CFG.qr_size, CFG.qr_size);
             } catch(e) { console.warn("Failed to generate QR"); }
 
-            // 3. Draw School Header Info (Optional - If your template relies on code to write it)
-            // Uncomment the lines below if your template has blank lines for the school details
-            /*
-            ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-            ctx.fillStyle = CFG.school.color; ctx.font = CFG.school.nameFont;
-            ctx.fillText("EXCELSIOR HIGH SCHOOL", CFG.school.nameX, CFG.school.nameY);
-            
-            ctx.fillStyle = CFG.school.textColor; ctx.font = CFG.school.subFont;
-            ctx.fillText("123 Education Lane, Knowledge City", CFG.school.addrX, CFG.school.addrY);
-            ctx.fillText("+91 9876543210", CFG.school.phoneX, CFG.school.phoneY);
-            ctx.fillText("info@excelsior.edu", CFG.school.emailX, CFG.school.emailY);
-            */
-
-            // 4. Set Global Text Style for Quadrants
+            // 3. Set Text Styles
             ctx.fillStyle = CFG.textColor;
             ctx.font = CFG.font;
             ctx.textAlign = 'left';
             ctx.textBaseline = CFG.textBaseline;
 
-            // Helper to handle AI Cropping inside the rectangular constraints
-            async function drawPhotoRect(photoUrl, boxInfo) {
+            // 4. AI Photo Cropper Helper
+            async function drawPhotoRect(photoUrl, boxX, boxY, boxW, boxH) {
                 if(!photoUrl) return;
                 try {
                     const photo = await loadCachedImage(photoUrl);
@@ -421,13 +611,11 @@
 
                     let sx = 0, sy = 0, sw = photo.width, sh = photo.height;
                     
-                    // MEDIA PIPE AI SMART CROP
                     if (aiStatus === 'loaded' && faceDetector) {
                         try {
                             const det = faceDetector.detect(photo);
                             if (det.detections.length > 0) {
                                 const b = det.detections[0].boundingBox;
-                                // Expand bounding box to grab shoulders and top of head
                                 const ax = b.width * 0.7, ay = b.height * 1.3; 
                                 sx = Math.max(0, b.originX - ax/2); 
                                 sy = Math.max(0, b.originY - ay/2);
@@ -437,57 +625,47 @@
                         } catch(e) { console.warn("AI Detect Failed for image", e); }
                     }
 
-                    // Fallback Center Crop logic if AI fails/misses
                     if (sx === 0 && sy === 0 && sw === photo.width) {
                         const imgRatio = photo.width / photo.height;
-                        const targetRatio = boxInfo.w / boxInfo.h;
+                        const targetRatio = boxW / boxH;
                         
-                        if (imgRatio > targetRatio) { // Image is wider than target box
-                            sh = photo.height;
-                            sw = photo.height * targetRatio;
-                            sx = (photo.width - sw) / 2;
-                            sy = 0;
-                        } else { // Image is taller than target box
-                            sw = photo.width;
-                            sh = photo.width / targetRatio;
-                            sx = 0;
-                            sy = photo.height * 0.1; // Offset down 10% to focus on head naturally
+                        if (imgRatio > targetRatio) { 
+                            sh = photo.height; sw = photo.height * targetRatio; sx = (photo.width - sw) / 2; sy = 0;
+                        } else { 
+                            sw = photo.width; sh = photo.width / targetRatio; sx = 0; sy = photo.height * 0.1; 
                         }
                     }
                     
-                    // Draw image precisely inside the rectangular boundary with slightly rounded edges
-                    drawRoundedImage(ctx, photo, sx, sy, sw, sh, boxInfo.x, boxInfo.y, boxInfo.w, boxInfo.h, 6);
+                    // Draw perfectly cropped image exactly inside the mapped coordinates
+                    ctx.drawImage(photo, sx, sy, sw, sh, boxX, boxY, boxW, boxH);
                 } catch(e) { console.log("Skipping missing photo"); }
             }
 
-            // --- 5. Draw Quadrant Data ---
-
             // A) STUDENT
-            await drawPhotoRect(record.student?.photo, CFG.student.photo);
-            ctx.fillText(record.student?.name || '', CFG.student.textX, CFG.student.nameY);
-            ctx.fillText(record.student?.class || '', CFG.student.textX, CFG.student.classY);
-            ctx.fillText(record.student?.aadhaar || '', CFG.student.textX, CFG.student.aadhaarY);
-            ctx.fillText(record.student?.phone || '', CFG.student.textX, CFG.student.phoneY);
+            await drawPhotoRect(record.student?.photo, CFG.student_photo_x, CFG.student_photo_y, CFG.student_photo_w, CFG.student_photo_h);
+            ctx.fillText(record.student?.name || '', CFG.student_name_x, CFG.student_name_y);
+            ctx.fillText(record.student?.class || '', CFG.student_class_x, CFG.student_class_y);
+            ctx.fillText(record.student?.aadhaar || '', CFG.student_aadhaar_x, CFG.student_aadhaar_y);
+            ctx.fillText(record.student?.phone || '', CFG.student_phone_x, CFG.student_phone_y);
 
             // B) FATHER
-            await drawPhotoRect(record.father?.photo, CFG.father.photo);
-            ctx.fillText(record.father?.name || '', CFG.father.textX, CFG.father.nameY);
-            ctx.fillText(record.father?.aadhaar || '', CFG.father.textX, CFG.father.aadhaarY);
-            ctx.fillText(record.father?.phone || '', CFG.father.textX, CFG.father.phoneY);
+            await drawPhotoRect(record.father?.photo, CFG.father_photo_x, CFG.father_photo_y, CFG.father_photo_w, CFG.father_photo_h);
+            ctx.fillText(record.father?.name || '', CFG.father_name_x, CFG.father_name_y);
+            ctx.fillText(record.father?.aadhaar || '', CFG.father_aadhaar_x, CFG.father_aadhaar_y);
+            ctx.fillText(record.father?.phone || '', CFG.father_phone_x, CFG.father_phone_y);
 
             // C) MOTHER
-            await drawPhotoRect(record.mother?.photo, CFG.mother.photo);
-            ctx.fillText(record.mother?.name || '', CFG.mother.textX, CFG.mother.nameY);
-            ctx.fillText(record.mother?.aadhaar || '', CFG.mother.textX, CFG.mother.aadhaarY);
-            ctx.fillText(record.mother?.phone || '', CFG.mother.textX, CFG.mother.phoneY);
+            await drawPhotoRect(record.mother?.photo, CFG.mother_photo_x, CFG.mother_photo_y, CFG.mother_photo_w, CFG.mother_photo_h);
+            ctx.fillText(record.mother?.name || '', CFG.mother_name_x, CFG.mother_name_y);
+            ctx.fillText(record.mother?.aadhaar || '', CFG.mother_aadhaar_x, CFG.mother_aadhaar_y);
+            ctx.fillText(record.mother?.phone || '', CFG.mother_phone_x, CFG.mother_phone_y);
 
             // D) GUARDIAN
-            await drawPhotoRect(record.guardian?.photo, CFG.guardian.photo);
-            ctx.fillText(record.guardian?.name || '', CFG.guardian.textX, CFG.guardian.nameY);
-            ctx.fillText(record.guardian?.aadhaar || '', CFG.guardian.textX, CFG.guardian.aadhaarY);
-            ctx.fillText(record.guardian?.phone || '', CFG.guardian.textX, CFG.guardian.phoneY);
+            await drawPhotoRect(record.guardian?.photo, CFG.guardian_photo_x, CFG.guardian_photo_y, CFG.guardian_photo_w, CFG.guardian_photo_h);
+            ctx.fillText(record.guardian?.name || '', CFG.guardian_name_x, CFG.guardian_name_y);
+            ctx.fillText(record.guardian?.aadhaar || '', CFG.guardian_aadhaar_x, CFG.guardian_aadhaar_y);
+            ctx.fillText(record.guardian?.phone || '', CFG.guardian_phone_x, CFG.guardian_phone_y);
 
-            // Convert complete canvas to blob for ZIP/Preview
             return await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
         }
 
@@ -506,7 +684,7 @@
                 document.getElementById('adminPreviewModal').style.display = 'flex';
             } catch (err) {
                 console.error(err);
-                window.showToast("Error generating preview. Check template.", "error");
+                window.showToast("Error generating preview. Ensure template exists.", "error");
             } finally {
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;
@@ -515,14 +693,12 @@
 
         window.executeZipDownload = async () => {
             if (window.allStudentsData.length === 0) {
-                window.showToast("No data to print", "error");
-                return;
+                window.showToast("No data to print", "error"); return;
             }
 
             const overlay = document.getElementById('zip-overlay');
             const statusText = document.getElementById('zip-status');
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
+            overlay.classList.remove('hidden'); overlay.classList.add('flex');
 
             const zip = new JSZip();
             const imgFolder = zip.folder("Hostel_Passes");
@@ -530,7 +706,6 @@
             try {
                 for (let i = 0; i < window.allStudentsData.length; i++) {
                     statusText.innerText = `Drawing high-res pass ${i + 1} of ${window.allStudentsData.length}...`;
-                    
                     const record = window.allStudentsData[i];
                     const safeName = (record.student?.name || 'Unknown').replace(/[^a-zA-Z0-9]/g, '_');
                     
@@ -551,8 +726,7 @@
                 console.error("ZIP Generation error:", error);
                 window.showToast("Failed to generate ZIP.", "error");
             } finally {
-                overlay.classList.add('hidden');
-                overlay.classList.remove('flex');
+                overlay.classList.add('hidden'); overlay.classList.remove('flex');
             }
         };
 
