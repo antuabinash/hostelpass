@@ -13,6 +13,9 @@
     
     <!-- JSZip for ZIP generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -94,6 +97,9 @@
                     <div class="flex gap-3 items-center">
                         <button onclick="openSettings()" class="px-3 sm:px-4 py-2 rounded-md text-sm font-medium bg-white text-blue-900 hover:bg-gray-100 transition-colors hidden sm:flex items-center gap-2 shadow-sm">
                             <i class="fa-solid fa-sliders"></i> Settings
+                        </button>
+                        <button onclick="executeVerificationPDF()" class="px-3 sm:px-4 py-2 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-500 border border-purple-500 transition-colors hidden sm:flex items-center gap-2 shadow-sm text-white">
+                            <i class="fa-solid fa-file-pdf"></i> Verification PDF
                         </button>
                         <button onclick="executeZipDownload()" class="px-3 sm:px-4 py-2 rounded-md text-sm font-medium bg-green-600 hover:bg-green-500 border border-green-500 transition-colors hidden sm:flex items-center gap-2 shadow-sm">
                             <i class="fa-solid fa-file-zipper"></i> Generate ZIP
@@ -766,6 +772,87 @@
                 console.error("ZIP Generation error:", error);
                 window.showToast("Failed to generate ZIP.", "error");
             } finally {
+                overlay.classList.add('hidden'); overlay.classList.remove('flex');
+            }
+        };
+
+        window.executeVerificationPDF = async () => {
+            if (window.allStudentsData.length === 0) {
+                window.showToast("No data to generate PDF", "error"); return;
+            }
+
+            const overlay = document.getElementById('zip-overlay');
+            const statusText = document.getElementById('zip-status');
+            const titleText = overlay.querySelector('h3');
+            const originalTitle = titleText.innerText;
+            
+            titleText.innerText = "Generating PDF...";
+            overlay.classList.remove('hidden'); overlay.classList.add('flex');
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const CFG = window.PASS_CONFIG;
+                // Initialize Landscape PDF matching the canvas dimensions perfectly
+                const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [CFG.width, CFG.height] });
+
+                for (let i = 0; i < window.allStudentsData.length; i++) {
+                    statusText.innerText = `Watermarking pass ${i + 1} of ${window.allStudentsData.length}...`;
+                    const record = window.allStudentsData[i];
+                    
+                    // 1. Generate base pass blob
+                    const blob = await drawCanvasPass(record);
+                    
+                    // 2. Load blob into an image
+                    const img = await new Promise((resolve, reject) => {
+                        const url = URL.createObjectURL(blob);
+                        const image = new Image();
+                        image.onload = () => { URL.revokeObjectURL(url); resolve(image); };
+                        image.onerror = reject;
+                        image.src = url;
+                    });
+
+                    // 3. Draw on temporary canvas and add watermark overlay
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = CFG.width;
+                    tempCanvas.height = CFG.height;
+                    const tCtx = tempCanvas.getContext('2d');
+                    
+                    tCtx.drawImage(img, 0, 0);
+                    
+                    // --- Add Watermark ---
+                    tCtx.save();
+                    tCtx.translate(CFG.width / 2, CFG.height / 2);
+                    tCtx.rotate(-Math.PI / 4); // 45-degree angle
+                    tCtx.fillStyle = 'rgba(255, 0, 0, 0.25)'; // Semi-transparent Red
+                    tCtx.font = 'bold 120px Arial';
+                    tCtx.textAlign = 'center';
+                    tCtx.textBaseline = 'middle';
+                    
+                    // Repeat watermark diagonally
+                    const diag = Math.sqrt(CFG.width * CFG.width + CFG.height * CFG.height);
+                    for(let x = -diag; x <= diag; x += 650) {
+                        for(let y = -diag; y <= diag; y += 300) {
+                            tCtx.fillText('ONLY FOR VERIFICATION', x, y);
+                        }
+                    }
+                    tCtx.restore();
+
+                    // Convert to fast rendering JPEG
+                    const jpegUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
+
+                    // Add to PDF
+                    if (i > 0) pdf.addPage([CFG.width, CFG.height], 'landscape');
+                    pdf.addImage(jpegUrl, 'JPEG', 0, 0, CFG.width, CFG.height);
+                }
+
+                statusText.innerText = `Saving PDF Document...`;
+                pdf.save(`Hostel_Passes_Verification_${new Date().getTime()}.pdf`);
+                window.showToast("Verification PDF generated successfully!");
+            } catch (error) {
+                console.error("PDF Generation error:", error);
+                window.showToast("Failed to generate PDF.", "error");
+            } finally {
+                titleText.innerText = originalTitle; // Reset overlay title
                 overlay.classList.add('hidden'); overlay.classList.remove('flex');
             }
         };
