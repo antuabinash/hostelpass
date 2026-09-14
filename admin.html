@@ -217,16 +217,16 @@
             qr_x: 1390, qr_y: 60, qr_size: 200,
             
             student_photo_x: 70, student_photo_y: 430, student_photo_w: 230, student_photo_h: 290,
-            student_name_x: 550, student_name_y: 470, student_class_x: 550, student_class_y: 540, student_aadhaar_x: 550, student_aadhaar_y: 610, student_phone_x: 550, student_phone_y: 680,
+            student_name_x: 550, student_name_y: 470, student_name_size: 40, student_class_x: 550, student_class_y: 540, student_class_size: 40, student_aadhaar_x: 550, student_aadhaar_y: 610, student_aadhaar_size: 40, student_phone_x: 550, student_phone_y: 680, student_phone_size: 40,
             
             father_photo_x: 935, father_photo_y: 430, father_photo_w: 230, father_photo_h: 290,
-            father_name_x: 1415, father_name_y: 470, father_aadhaar_x: 1415, father_aadhaar_y: 540, father_phone_x: 1415, father_phone_y: 610,
+            father_name_x: 1415, father_name_y: 470, father_name_size: 40, father_aadhaar_x: 1415, father_aadhaar_y: 540, father_aadhaar_size: 40, father_phone_x: 1415, father_phone_y: 610, father_phone_size: 40,
             
             mother_photo_x: 70, mother_photo_y: 830, mother_photo_w: 230, mother_photo_h: 290,
-            mother_name_x: 550, mother_name_y: 870, mother_aadhaar_x: 550, mother_aadhaar_y: 940, mother_phone_x: 550, mother_phone_y: 1010,
+            mother_name_x: 550, mother_name_y: 870, mother_name_size: 40, mother_aadhaar_x: 550, mother_aadhaar_y: 940, mother_aadhaar_size: 40, mother_phone_x: 550, mother_phone_y: 1010, mother_phone_size: 40,
             
             guardian_photo_x: 935, guardian_photo_y: 830, guardian_photo_w: 230, guardian_photo_h: 290,
-            guardian_name_x: 1415, guardian_name_y: 870, guardian_aadhaar_x: 1415, guardian_aadhaar_y: 940, guardian_phone_x: 1415, guardian_phone_y: 1010
+            guardian_name_x: 1415, guardian_name_y: 870, guardian_name_size: 40, guardian_aadhaar_x: 1415, guardian_aadhaar_y: 940, guardian_aadhaar_size: 40, guardian_phone_x: 1415, guardian_phone_y: 1010, guardian_phone_size: 40
         };
 
         // Load saved coordinates from local storage, or fallback to defaults
@@ -242,25 +242,25 @@
             { id: 'qr', type: 'rect', text: 'QR', color: 'rgba(0,0,0,0.3)', props: {x: 'qr_x', y: 'qr_y', w: 'qr_size'} },
             
             { id: 'student_photo', type: 'rect', text: 'STUDENT', color: 'rgba(59,130,246,0.3)', props: {x: 'student_photo_x', y: 'student_photo_y', w: 'student_photo_w', h: 'student_photo_h'} },
-            { id: 'student_name', type: 'text', text: 'Student Name', props: {x: 'student_name_x', y: 'student_name_y'} },
-            { id: 'student_class', type: 'text', text: 'Student Class', props: {x: 'student_class_x', y: 'student_class_y'} },
-            { id: 'student_aadhaar', type: 'text', text: 'Student Aadhaar', props: {x: 'student_aadhaar_x', y: 'student_aadhaar_y'} },
-            { id: 'student_phone', type: 'text', text: 'Student Phone', props: {x: 'student_phone_x', y: 'student_phone_y'} },
+            { id: 'student_name', type: 'text', text: 'Student Name', props: {x: 'student_name_x', y: 'student_name_y', size: 'student_name_size'} },
+            { id: 'student_class', type: 'text', text: 'Student Class', props: {x: 'student_class_x', y: 'student_class_y', size: 'student_class_size'} },
+            { id: 'student_aadhaar', type: 'text', text: 'Student Aadhaar', props: {x: 'student_aadhaar_x', y: 'student_aadhaar_y', size: 'student_aadhaar_size'} },
+            { id: 'student_phone', type: 'text', text: 'Student Phone', props: {x: 'student_phone_x', y: 'student_phone_y', size: 'student_phone_size'} },
             
             { id: 'father_photo', type: 'rect', text: 'FATHER', color: 'rgba(59,130,246,0.3)', props: {x: 'father_photo_x', y: 'father_photo_y', w: 'father_photo_w', h: 'father_photo_h'} },
-            { id: 'father_name', type: 'text', text: 'Father Name', props: {x: 'father_name_x', y: 'father_name_y'} },
-            { id: 'father_aadhaar', type: 'text', text: 'Father Aadhaar', props: {x: 'father_aadhaar_x', y: 'father_aadhaar_y'} },
-            { id: 'father_phone', type: 'text', text: 'Father Phone', props: {x: 'father_phone_x', y: 'father_phone_y'} },
+            { id: 'father_name', type: 'text', text: 'Father Name', props: {x: 'father_name_x', y: 'father_name_y', size: 'father_name_size'} },
+            { id: 'father_aadhaar', type: 'text', text: 'Father Aadhaar', props: {x: 'father_aadhaar_x', y: 'father_aadhaar_y', size: 'father_aadhaar_size'} },
+            { id: 'father_phone', type: 'text', text: 'Father Phone', props: {x: 'father_phone_x', y: 'father_phone_y', size: 'father_phone_size'} },
 
             { id: 'mother_photo', type: 'rect', text: 'MOTHER', color: 'rgba(59,130,246,0.3)', props: {x: 'mother_photo_x', y: 'mother_photo_y', w: 'mother_photo_w', h: 'mother_photo_h'} },
-            { id: 'mother_name', type: 'text', text: 'Mother Name', props: {x: 'mother_name_x', y: 'mother_name_y'} },
-            { id: 'mother_aadhaar', type: 'text', text: 'Mother Aadhaar', props: {x: 'mother_aadhaar_x', y: 'mother_aadhaar_y'} },
-            { id: 'mother_phone', type: 'text', text: 'Mother Phone', props: {x: 'mother_phone_x', y: 'mother_phone_y'} },
+            { id: 'mother_name', type: 'text', text: 'Mother Name', props: {x: 'mother_name_x', y: 'mother_name_y', size: 'mother_name_size'} },
+            { id: 'mother_aadhaar', type: 'text', text: 'Mother Aadhaar', props: {x: 'mother_aadhaar_x', y: 'mother_aadhaar_y', size: 'mother_aadhaar_size'} },
+            { id: 'mother_phone', type: 'text', text: 'Mother Phone', props: {x: 'mother_phone_x', y: 'mother_phone_y', size: 'mother_phone_size'} },
 
             { id: 'guardian_photo', type: 'rect', text: 'GUARDIAN', color: 'rgba(59,130,246,0.3)', props: {x: 'guardian_photo_x', y: 'guardian_photo_y', w: 'guardian_photo_w', h: 'guardian_photo_h'} },
-            { id: 'guardian_name', type: 'text', text: 'Guardian Name', props: {x: 'guardian_name_x', y: 'guardian_name_y'} },
-            { id: 'guardian_aadhaar', type: 'text', text: 'Guardian Aadhaar', props: {x: 'guardian_aadhaar_x', y: 'guardian_aadhaar_y'} },
-            { id: 'guardian_phone', type: 'text', text: 'Guardian Phone', props: {x: 'guardian_phone_x', y: 'guardian_phone_y'} }
+            { id: 'guardian_name', type: 'text', text: 'Guardian Name', props: {x: 'guardian_name_x', y: 'guardian_name_y', size: 'guardian_name_size'} },
+            { id: 'guardian_aadhaar', type: 'text', text: 'Guardian Aadhaar', props: {x: 'guardian_aadhaar_x', y: 'guardian_aadhaar_y', size: 'guardian_aadhaar_size'} },
+            { id: 'guardian_phone', type: 'text', text: 'Guardian Phone', props: {x: 'guardian_phone_x', y: 'guardian_phone_y', size: 'guardian_phone_size'} }
         ];
 
         let editorCanvas = document.getElementById('editorCanvas');
@@ -303,38 +303,33 @@
             drawEditorCanvas();
         };
 
-        window.updateFontSize = (val) => {
-            const size = parseInt(val) || 40;
-            window.PASS_CONFIG.font = `600 ${size}px Arial`;
-            drawEditorCanvas();
-        };
-
         function populateSidebar() {
             const sidebar = document.getElementById('editor-sidebar');
-            let currentFontSize = parseInt(window.PASS_CONFIG.font.match(/\d+/)[0]) || 40;
+            
+            // Ensure all missing size configs are filled with 40
+            layoutFields.forEach(f => {
+                if (f.type === 'text' && !window.PASS_CONFIG[f.props.size]) {
+                    window.PASS_CONFIG[f.props.size] = 40;
+                }
+            });
             
             let html = `
                 <h3 class="font-bold text-gray-700 mb-3 border-b pb-2 sticky top-0 bg-white z-10">Settings & Coordinates</h3>
-                <div class="mb-4 bg-blue-50 p-3 rounded-lg border border-blue-200">
-                    <div class="font-semibold text-sm mb-2 text-blue-800"><i class="fa-solid fa-text-height"></i> Global Text Size</div>
-                    <div class="flex items-center gap-2">
-                        <input type="number" id="inp_fontSize" value="${currentFontSize}" class="w-full border rounded p-1.5 text-sm" oninput="updateFontSize(this.value)">
-                        <span class="text-xs text-gray-500 font-bold">px</span>
-                    </div>
-                </div>
             `;
             
             layoutFields.forEach(f => {
                 html += `
                 <div class="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 transition-colors" id="panel_${f.id}">
-                    <div class="font-semibold text-sm mb-2 text-blue-800">${f.text} Properties</div>
+                    <div class="font-semibold text-sm mb-2 text-blue-800">${f.text}</div>
                     <div class="grid grid-cols-2 gap-2">
                         <div><label class="text-xs text-gray-500">X Position</label><input type="number" id="inp_${f.props.x}" value="${window.PASS_CONFIG[f.props.x]}" class="w-full border rounded p-1.5 text-sm" oninput="updateConfigFromInput('${f.props.x}')"></div>
                         <div><label class="text-xs text-gray-500">Y Position</label><input type="number" id="inp_${f.props.y}" value="${window.PASS_CONFIG[f.props.y]}" class="w-full border rounded p-1.5 text-sm" oninput="updateConfigFromInput('${f.props.y}')"></div>
                         ${f.type === 'rect' ? `
                             <div><label class="text-xs text-gray-500">Width</label><input type="number" id="inp_${f.props.w}" value="${window.PASS_CONFIG[f.props.w]}" class="w-full border rounded p-1.5 text-sm" oninput="updateConfigFromInput('${f.props.w}')"></div>
                             ${f.props.h ? `<div><label class="text-xs text-gray-500">Height</label><input type="number" id="inp_${f.props.h}" value="${window.PASS_CONFIG[f.props.h]}" class="w-full border rounded p-1.5 text-sm" oninput="updateConfigFromInput('${f.props.h}')"></div>` : ''}
-                        ` : ''}
+                        ` : `
+                            <div class="col-span-2"><label class="text-xs text-gray-500">Text Size (px)</label><input type="number" id="inp_${f.props.size}" value="${window.PASS_CONFIG[f.props.size]}" class="w-full border rounded p-1.5 text-sm" oninput="updateConfigFromInput('${f.props.size}')"></div>
+                        `}
                     </div>
                 </div>`;
             });
@@ -355,7 +350,6 @@
                 editorCtx.fillText("Ensure 'hoste_pass_2.jpg' is in the same folder.", editorCanvas.width/2, editorCanvas.height/2);
             }
             
-            editorCtx.font = window.PASS_CONFIG.font;
             editorCtx.textBaseline = window.PASS_CONFIG.textBaseline;
 
             // Draw visual editor elements
@@ -377,7 +371,9 @@
                     editorCtx.fillText(f.text, x + w/2, y + h/2);
                 } else {
                     const x = window.PASS_CONFIG[f.props.x], y = window.PASS_CONFIG[f.props.y];
-                    editorCtx.font = window.PASS_CONFIG.font;
+                    const size = window.PASS_CONFIG[f.props.size] || 40;
+                    
+                    editorCtx.font = `600 ${size}px Arial`;
                     editorCtx.fillStyle = isHover ? '#ef4444' : window.PASS_CONFIG.textColor;
                     editorCtx.textAlign = 'left';
                     editorCtx.fillText(f.text, x, y);
@@ -398,7 +394,6 @@
         }
 
         function hitTestEditor(x, y) {
-            editorCtx.font = window.PASS_CONFIG.font;
             // Reverse loop to grab topmost items first
             for (let i = layoutFields.length - 1; i >= 0; i--) {
                 const f = layoutFields[i];
@@ -410,8 +405,10 @@
                     const fh = Number(window.PASS_CONFIG[f.props.h] || window.PASS_CONFIG[f.props.w]);
                     if (x >= fx && x <= fx + fw && y >= fy && y <= fy + fh) return f;
                 } else {
+                    const size = Number(window.PASS_CONFIG[f.props.size]) || 40;
+                    editorCtx.font = `600 ${size}px Arial`;
                     const tw = editorCtx.measureText(f.text).width;
-                    const th = 40; // Approx height
+                    const th = size; // Bounding box based on individual size
                     if (x >= fx - 10 && x <= fx + tw + 10 && y >= fy - th/2 && y <= fy + th/2) return f;
                 }
             }
@@ -631,11 +628,19 @@
                 if(qrImg) ctx.drawImage(qrImg, CFG.qr_x, CFG.qr_y, CFG.qr_size, CFG.qr_size);
             } catch(e) { console.warn("Failed to generate QR"); }
 
-            // 3. Set Text Styles
+            // 3. Set Base Text Styles
             ctx.fillStyle = CFG.textColor;
-            ctx.font = CFG.font;
             ctx.textAlign = 'left';
             ctx.textBaseline = CFG.textBaseline;
+
+            const printText = (val, xProp, yProp, sizeProp) => {
+                const text = cleanField(val);
+                if(text) {
+                    const size = CFG[sizeProp] || 40;
+                    ctx.font = `600 ${size}px Arial`;
+                    ctx.fillText(text, CFG[xProp], CFG[yProp]);
+                }
+            };
 
             // 4. AI Photo Cropper Helper
             async function drawPhotoRect(photoUrl, boxX, boxY, boxW, boxH) {
@@ -678,28 +683,28 @@
 
             // A) STUDENT
             await drawPhotoRect(record.student?.photo, CFG.student_photo_x, CFG.student_photo_y, CFG.student_photo_w, CFG.student_photo_h);
-            ctx.fillText(cleanField(record.student?.name), CFG.student_name_x, CFG.student_name_y);
-            ctx.fillText(cleanField(record.student?.class), CFG.student_class_x, CFG.student_class_y);
-            ctx.fillText(cleanField(record.student?.aadhaar), CFG.student_aadhaar_x, CFG.student_aadhaar_y);
-            ctx.fillText(cleanField(record.student?.phone), CFG.student_phone_x, CFG.student_phone_y);
+            printText(record.student?.name, 'student_name_x', 'student_name_y', 'student_name_size');
+            printText(record.student?.class, 'student_class_x', 'student_class_y', 'student_class_size');
+            printText(record.student?.aadhaar, 'student_aadhaar_x', 'student_aadhaar_y', 'student_aadhaar_size');
+            printText(record.student?.phone, 'student_phone_x', 'student_phone_y', 'student_phone_size');
 
             // B) FATHER
             await drawPhotoRect(record.father?.photo, CFG.father_photo_x, CFG.father_photo_y, CFG.father_photo_w, CFG.father_photo_h);
-            ctx.fillText(cleanField(record.father?.name), CFG.father_name_x, CFG.father_name_y);
-            ctx.fillText(cleanField(record.father?.aadhaar), CFG.father_aadhaar_x, CFG.father_aadhaar_y);
-            ctx.fillText(cleanField(record.father?.phone), CFG.father_phone_x, CFG.father_phone_y);
+            printText(record.father?.name, 'father_name_x', 'father_name_y', 'father_name_size');
+            printText(record.father?.aadhaar, 'father_aadhaar_x', 'father_aadhaar_y', 'father_aadhaar_size');
+            printText(record.father?.phone, 'father_phone_x', 'father_phone_y', 'father_phone_size');
 
             // C) MOTHER
             await drawPhotoRect(record.mother?.photo, CFG.mother_photo_x, CFG.mother_photo_y, CFG.mother_photo_w, CFG.mother_photo_h);
-            ctx.fillText(cleanField(record.mother?.name), CFG.mother_name_x, CFG.mother_name_y);
-            ctx.fillText(cleanField(record.mother?.aadhaar), CFG.mother_aadhaar_x, CFG.mother_aadhaar_y);
-            ctx.fillText(cleanField(record.mother?.phone), CFG.mother_phone_x, CFG.mother_phone_y);
+            printText(record.mother?.name, 'mother_name_x', 'mother_name_y', 'mother_name_size');
+            printText(record.mother?.aadhaar, 'mother_aadhaar_x', 'mother_aadhaar_y', 'mother_aadhaar_size');
+            printText(record.mother?.phone, 'mother_phone_x', 'mother_phone_y', 'mother_phone_size');
 
             // D) GUARDIAN
             await drawPhotoRect(record.guardian?.photo, CFG.guardian_photo_x, CFG.guardian_photo_y, CFG.guardian_photo_w, CFG.guardian_photo_h);
-            ctx.fillText(cleanField(record.guardian?.name), CFG.guardian_name_x, CFG.guardian_name_y);
-            ctx.fillText(cleanField(record.guardian?.aadhaar), CFG.guardian_aadhaar_x, CFG.guardian_aadhaar_y);
-            ctx.fillText(cleanField(record.guardian?.phone), CFG.guardian_phone_x, CFG.guardian_phone_y);
+            printText(record.guardian?.name, 'guardian_name_x', 'guardian_name_y', 'guardian_name_size');
+            printText(record.guardian?.aadhaar, 'guardian_aadhaar_x', 'guardian_aadhaar_y', 'guardian_aadhaar_size');
+            printText(record.guardian?.phone, 'guardian_phone_x', 'guardian_phone_y', 'guardian_phone_size');
 
             return await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
         }
