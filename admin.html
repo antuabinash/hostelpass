@@ -213,7 +213,7 @@
         // These defaults map perfectly to the 1754 x 1240 layout requested
         const DEFAULT_CONFIG = {
             bgUrl: 'hoste_pass_2.jpg', width: 1754, height: 1240,
-            font: '600 27px Arial', textColor: '#0f2b5b', textBaseline: 'middle',
+            font: '600 40px Arial', textColor: '#0f2b5b', textBaseline: 'middle',
             qr_x: 1390, qr_y: 60, qr_size: 200,
             
             student_photo_x: 70, student_photo_y: 430, student_photo_w: 230, student_photo_h: 290,
@@ -231,6 +231,11 @@
 
         // Load saved coordinates from local storage, or fallback to defaults
         window.PASS_CONFIG = JSON.parse(localStorage.getItem('hostelPassSettings')) || {...DEFAULT_CONFIG};
+        
+        // Upgrade font size for existing users from 27px to 40px automatically
+        if (window.PASS_CONFIG.font === '600 27px Arial') {
+            window.PASS_CONFIG.font = '600 40px Arial';
+        }
 
         // Define which fields are draggable in the UI
         const layoutFields = [
@@ -298,9 +303,26 @@
             drawEditorCanvas();
         };
 
+        window.updateFontSize = (val) => {
+            const size = parseInt(val) || 40;
+            window.PASS_CONFIG.font = `600 ${size}px Arial`;
+            drawEditorCanvas();
+        };
+
         function populateSidebar() {
             const sidebar = document.getElementById('editor-sidebar');
-            let html = '<h3 class="font-bold text-gray-700 mb-3 border-b pb-2 sticky top-0 bg-white z-10">Coordinates Setup</h3>';
+            let currentFontSize = parseInt(window.PASS_CONFIG.font.match(/\d+/)[0]) || 40;
+            
+            let html = `
+                <h3 class="font-bold text-gray-700 mb-3 border-b pb-2 sticky top-0 bg-white z-10">Settings & Coordinates</h3>
+                <div class="mb-4 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <div class="font-semibold text-sm mb-2 text-blue-800"><i class="fa-solid fa-text-height"></i> Global Text Size</div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="inp_fontSize" value="${currentFontSize}" class="w-full border rounded p-1.5 text-sm" oninput="updateFontSize(this.value)">
+                        <span class="text-xs text-gray-500 font-bold">px</span>
+                    </div>
+                </div>
+            `;
             
             layoutFields.forEach(f => {
                 html += `
@@ -588,8 +610,21 @@
                 return await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95)); 
             }
 
+            // --- HELPER: Clean dummy values (NA, 000000) to render blank ---
+            const cleanField = (val) => {
+                if (!val) return '';
+                const v = val.toString().trim().toUpperCase();
+                // If value is exactly "NA", "N/A", "UNKNOWN", or just a bunch of zeros
+                if (v === 'NA' || v === 'N/A' || v === 'UNKNOWN' || /^0+$/.test(v)) return '';
+                return val;
+            };
+
             // 2. Draw Dynamic QR Code
-            let qrText = `HOSTEL PASS\nSTU: ${record.student?.name||''}\nID: ${record.student?.aadhaar||''}`;
+            let sName = cleanField(record.student?.name) || 'Not Provided';
+            let sAadhaar = cleanField(record.student?.aadhaar) || 'Not Provided';
+            let sPhone = cleanField(record.student?.phone) || 'Not Provided';
+            let qrText = `RSEWC High School, Rayagada, Odisha\nHOSTEL PASS\nName: ${sName}\nAadhaar: ${sAadhaar}\nPhone: ${sPhone}`;
+            
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrText)}`;
             try {
                 const qrImg = await loadCachedImage(qrUrl);
@@ -643,28 +678,28 @@
 
             // A) STUDENT
             await drawPhotoRect(record.student?.photo, CFG.student_photo_x, CFG.student_photo_y, CFG.student_photo_w, CFG.student_photo_h);
-            ctx.fillText(record.student?.name || '', CFG.student_name_x, CFG.student_name_y);
-            ctx.fillText(record.student?.class || '', CFG.student_class_x, CFG.student_class_y);
-            ctx.fillText(record.student?.aadhaar || '', CFG.student_aadhaar_x, CFG.student_aadhaar_y);
-            ctx.fillText(record.student?.phone || '', CFG.student_phone_x, CFG.student_phone_y);
+            ctx.fillText(cleanField(record.student?.name), CFG.student_name_x, CFG.student_name_y);
+            ctx.fillText(cleanField(record.student?.class), CFG.student_class_x, CFG.student_class_y);
+            ctx.fillText(cleanField(record.student?.aadhaar), CFG.student_aadhaar_x, CFG.student_aadhaar_y);
+            ctx.fillText(cleanField(record.student?.phone), CFG.student_phone_x, CFG.student_phone_y);
 
             // B) FATHER
             await drawPhotoRect(record.father?.photo, CFG.father_photo_x, CFG.father_photo_y, CFG.father_photo_w, CFG.father_photo_h);
-            ctx.fillText(record.father?.name || '', CFG.father_name_x, CFG.father_name_y);
-            ctx.fillText(record.father?.aadhaar || '', CFG.father_aadhaar_x, CFG.father_aadhaar_y);
-            ctx.fillText(record.father?.phone || '', CFG.father_phone_x, CFG.father_phone_y);
+            ctx.fillText(cleanField(record.father?.name), CFG.father_name_x, CFG.father_name_y);
+            ctx.fillText(cleanField(record.father?.aadhaar), CFG.father_aadhaar_x, CFG.father_aadhaar_y);
+            ctx.fillText(cleanField(record.father?.phone), CFG.father_phone_x, CFG.father_phone_y);
 
             // C) MOTHER
             await drawPhotoRect(record.mother?.photo, CFG.mother_photo_x, CFG.mother_photo_y, CFG.mother_photo_w, CFG.mother_photo_h);
-            ctx.fillText(record.mother?.name || '', CFG.mother_name_x, CFG.mother_name_y);
-            ctx.fillText(record.mother?.aadhaar || '', CFG.mother_aadhaar_x, CFG.mother_aadhaar_y);
-            ctx.fillText(record.mother?.phone || '', CFG.mother_phone_x, CFG.mother_phone_y);
+            ctx.fillText(cleanField(record.mother?.name), CFG.mother_name_x, CFG.mother_name_y);
+            ctx.fillText(cleanField(record.mother?.aadhaar), CFG.mother_aadhaar_x, CFG.mother_aadhaar_y);
+            ctx.fillText(cleanField(record.mother?.phone), CFG.mother_phone_x, CFG.mother_phone_y);
 
             // D) GUARDIAN
             await drawPhotoRect(record.guardian?.photo, CFG.guardian_photo_x, CFG.guardian_photo_y, CFG.guardian_photo_w, CFG.guardian_photo_h);
-            ctx.fillText(record.guardian?.name || '', CFG.guardian_name_x, CFG.guardian_name_y);
-            ctx.fillText(record.guardian?.aadhaar || '', CFG.guardian_aadhaar_x, CFG.guardian_aadhaar_y);
-            ctx.fillText(record.guardian?.phone || '', CFG.guardian_phone_x, CFG.guardian_phone_y);
+            ctx.fillText(cleanField(record.guardian?.name), CFG.guardian_name_x, CFG.guardian_name_y);
+            ctx.fillText(cleanField(record.guardian?.aadhaar), CFG.guardian_aadhaar_x, CFG.guardian_aadhaar_y);
+            ctx.fillText(cleanField(record.guardian?.phone), CFG.guardian_phone_x, CFG.guardian_phone_y);
 
             return await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
         }
