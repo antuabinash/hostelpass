@@ -622,10 +622,18 @@
                 return val;
             };
 
+            // --- HELPER: Convert English digits to Odia digits ---
+            const toOdiaDigits = (val) => {
+                if (!val) return '';
+                const odiaMap = {'0':'୦','1':'୧','2':'୨','3':'୩','4':'୪','5':'୫','6':'୬','7':'୭','8':'୮','9':'୯'};
+                // Only targets 0-9. Leaves existing Odia characters untouched.
+                return val.toString().replace(/[0-9]/g, m => odiaMap[m]);
+            };
+
             // 2. Draw Dynamic QR Code
             let sName = cleanField(record.student?.name) || 'Not Provided';
-            let sAadhaar = cleanField(record.student?.aadhaar) || 'Not Provided';
-            let sPhone = cleanField(record.student?.phone) || 'Not Provided';
+            let sAadhaar = toOdiaDigits(cleanField(record.student?.aadhaar)) || 'Not Provided';
+            let sPhone = toOdiaDigits(cleanField(record.student?.phone)) || 'Not Provided';
             let qrText = `RSEWC High School, Rayagada, Odisha\nHOSTEL PASS\nName: ${sName}\nAadhaar: ${sAadhaar}\nPhone: ${sPhone}`;
             
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrText)}`;
@@ -639,9 +647,11 @@
             ctx.textAlign = 'left';
             ctx.textBaseline = CFG.textBaseline;
 
-            const printText = (val, xProp, yProp, sizeProp) => {
-                const text = cleanField(val);
+            const printText = (val, xProp, yProp, sizeProp, isNumber = false) => {
+                let text = cleanField(val);
                 if(text) {
+                    // Apply Odia conversion if it is a number field (Phone/Aadhaar)
+                    if (isNumber) text = toOdiaDigits(text);
                     const size = CFG[sizeProp] || 40;
                     ctx.font = `600 ${size}px Arial`;
                     ctx.fillText(text, CFG[xProp], CFG[yProp]);
@@ -691,26 +701,26 @@
             await drawPhotoRect(record.student?.photo, CFG.student_photo_x, CFG.student_photo_y, CFG.student_photo_w, CFG.student_photo_h);
             printText(record.student?.name, 'student_name_x', 'student_name_y', 'student_name_size');
             printText(record.student?.class, 'student_class_x', 'student_class_y', 'student_class_size');
-            printText(record.student?.aadhaar, 'student_aadhaar_x', 'student_aadhaar_y', 'student_aadhaar_size');
-            printText(record.student?.phone, 'student_phone_x', 'student_phone_y', 'student_phone_size');
+            printText(record.student?.aadhaar, 'student_aadhaar_x', 'student_aadhaar_y', 'student_aadhaar_size', true);
+            printText(record.student?.phone, 'student_phone_x', 'student_phone_y', 'student_phone_size', true);
 
             // B) FATHER
             await drawPhotoRect(record.father?.photo, CFG.father_photo_x, CFG.father_photo_y, CFG.father_photo_w, CFG.father_photo_h);
             printText(record.father?.name, 'father_name_x', 'father_name_y', 'father_name_size');
-            printText(record.father?.aadhaar, 'father_aadhaar_x', 'father_aadhaar_y', 'father_aadhaar_size');
-            printText(record.father?.phone, 'father_phone_x', 'father_phone_y', 'father_phone_size');
+            printText(record.father?.aadhaar, 'father_aadhaar_x', 'father_aadhaar_y', 'father_aadhaar_size', true);
+            printText(record.father?.phone, 'father_phone_x', 'father_phone_y', 'father_phone_size', true);
 
             // C) MOTHER
             await drawPhotoRect(record.mother?.photo, CFG.mother_photo_x, CFG.mother_photo_y, CFG.mother_photo_w, CFG.mother_photo_h);
             printText(record.mother?.name, 'mother_name_x', 'mother_name_y', 'mother_name_size');
-            printText(record.mother?.aadhaar, 'mother_aadhaar_x', 'mother_aadhaar_y', 'mother_aadhaar_size');
-            printText(record.mother?.phone, 'mother_phone_x', 'mother_phone_y', 'mother_phone_size');
+            printText(record.mother?.aadhaar, 'mother_aadhaar_x', 'mother_aadhaar_y', 'mother_aadhaar_size', true);
+            printText(record.mother?.phone, 'mother_phone_x', 'mother_phone_y', 'mother_phone_size', true);
 
             // D) GUARDIAN
             await drawPhotoRect(record.guardian?.photo, CFG.guardian_photo_x, CFG.guardian_photo_y, CFG.guardian_photo_w, CFG.guardian_photo_h);
             printText(record.guardian?.name, 'guardian_name_x', 'guardian_name_y', 'guardian_name_size');
-            printText(record.guardian?.aadhaar, 'guardian_aadhaar_x', 'guardian_aadhaar_y', 'guardian_aadhaar_size');
-            printText(record.guardian?.phone, 'guardian_phone_x', 'guardian_phone_y', 'guardian_phone_size');
+            printText(record.guardian?.aadhaar, 'guardian_aadhaar_x', 'guardian_aadhaar_y', 'guardian_aadhaar_size', true);
+            printText(record.guardian?.phone, 'guardian_phone_x', 'guardian_phone_y', 'guardian_phone_size', true);
 
             return await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
         }
@@ -823,15 +833,15 @@
                     tCtx.save();
                     tCtx.translate(CFG.width / 2, CFG.height / 2);
                     tCtx.rotate(-Math.PI / 4); // 45-degree angle
-                    tCtx.fillStyle = 'rgba(255, 0, 0, 0.25)'; // Semi-transparent Red
-                    tCtx.font = 'bold 120px Arial';
+                    tCtx.fillStyle = 'rgba(128, 128, 128, 0.35)'; // Semi-transparent Gray
+                    tCtx.font = 'bold 50px Arial'; // Smaller text
                     tCtx.textAlign = 'center';
                     tCtx.textBaseline = 'middle';
                     
-                    // Repeat watermark diagonally
+                    // Repeat watermark diagonally with cleaner spacing
                     const diag = Math.sqrt(CFG.width * CFG.width + CFG.height * CFG.height);
-                    for(let x = -diag; x <= diag; x += 650) {
-                        for(let y = -diag; y <= diag; y += 300) {
+                    for(let x = -diag; x <= diag; x += 500) {
+                        for(let y = -diag; y <= diag; y += 250) {
                             tCtx.fillText('ONLY FOR VERIFICATION', x, y);
                         }
                     }
